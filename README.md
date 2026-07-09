@@ -1,4 +1,4 @@
-# Saudável Glicose — App v2
+# GestaGlic — App v2
 
 Frontend mobile-first para controle de glicemia em gestantes com diabetes gestacional.
 

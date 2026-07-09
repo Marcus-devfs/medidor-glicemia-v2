@@ -5,21 +5,23 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { AppShell } from "@/components/layout/AppShell";
 import { SwCleanup } from "@/components/layout/SwCleanup";
 
+import { APP_NAME, APP_ICON } from "@/lib/brand";
+
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "Saudável Glicose",
+  title: APP_NAME,
   description:
-    "Controle de glicemia para gestantes com diabetes gestacional. Registre medições, acompanhe gráficos e receba lembretes.",
+    "GestaGlic — controle de glicemia para gestantes com diabetes gestacional. Registre medições, acompanhe gráficos e receba lembretes.",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Saudável Glicose",
+    title: APP_NAME,
   },
   icons: {
-    icon: "/icons/icon-192.png",
-    apple: "/icons/icon-192.png",
+    icon: APP_ICON,
+    apple: APP_ICON,
   },
 };
 

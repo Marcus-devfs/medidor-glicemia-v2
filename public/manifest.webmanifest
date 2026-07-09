@@ -1,6 +1,6 @@
 {
-  "name": "Saudável Glicose",
-  "short_name": "Glicose",
+  "name": "GestaGlic",
+  "short_name": "GestaGlic",
   "description": "Controle de glicemia para gestantes com diabetes gestacional",
   "start_url": "/",
   "display": "standalone",
@@ -10,6 +10,12 @@
   "lang": "pt-BR",
   "categories": ["health", "medical"],
   "icons": [
+    {
+      "src": "/icons/icone-app-1024.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
     {
       "src": "/icons/icon-192.png",
       "sizes": "192x192",
@@ -28,7 +34,7 @@
       "name": "Nova medição",
       "short_name": "Medir",
       "url": "/medicao",
-      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/icons/icone-app-1024.png", "sizes": "1024x1024" }]
     }
   ]
 }

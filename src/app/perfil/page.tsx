@@ -12,9 +12,14 @@ import { api } from "@/lib/api";
 import {
   getReminderConfig,
   saveReminderConfig,
-  requestNotificationPermission,
   DEFAULT_REMINDERS,
 } from "@/lib/notifications";
+import {
+  enablePushNotifications,
+  unsubscribeFromPush,
+  syncRemindersToServer,
+  fetchRemindersFromServer,
+} from "@/lib/push/client";
 import type { ReminderConfig } from "@/types";
 
 export default function PerfilPage() {
@@ -24,10 +29,22 @@ export default function PerfilPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [reminders, setReminders] = useState<ReminderConfig>(DEFAULT_REMINDERS);
   const [saving, setSaving] = useState(false);
+  const [pushLoading, setPushLoading] = useState(false);
 
   useEffect(() => {
-    setName(user?.name ?? "");
-    setReminders(getReminderConfig());
+    async function load() {
+      setName(user?.name ?? "");
+      if (!user?._id) return;
+
+      const fromServer = await fetchRemindersFromServer(user._id);
+      if (fromServer) {
+        setReminders(fromServer);
+        saveReminderConfig(fromServer);
+      } else {
+        setReminders(getReminderConfig());
+      }
+    }
+    load();
   }, [user]);
 
   const handleSaveProfile = async () => {
@@ -68,26 +85,50 @@ export default function PerfilPage() {
   };
 
   const toggleReminders = async () => {
-    const updated = { ...reminders, enabled: !reminders.enabled };
-    if (updated.enabled) {
-      const granted = await requestNotificationPermission();
-      if (!granted) {
-        toast("Permissão de notificação negada", "error");
-        return;
+    if (!user?._id) return;
+    setPushLoading(true);
+
+    try {
+      if (!reminders.enabled) {
+        const result = await enablePushNotifications(user._id);
+        if (!result.success) {
+          const messages = {
+            denied: "Permissão de notificação negada",
+            unsupported: "Seu navegador não suporta notificações push",
+            no_vapid: "Push não configurado no servidor",
+            dismissed: "Permissão não concedida",
+            api_error: "Erro ao ativar notificações",
+          };
+          toast(messages[result.reason] ?? "Erro ao ativar", "error");
+          return;
+        }
+        const updated = { ...reminders, enabled: true };
+        setReminders(updated);
+        saveReminderConfig(updated);
+        toast("Lembretes ativados! Você receberá nos horários configurados.", "success");
+      } else {
+        await unsubscribeFromPush();
+        const updated = { ...reminders, enabled: false };
+        setReminders(updated);
+        saveReminderConfig(updated);
+        await syncRemindersToServer(user._id, updated);
+        toast("Lembretes desativados", "success");
       }
+    } finally {
+      setPushLoading(false);
     }
-    setReminders(updated);
-    saveReminderConfig(updated);
-    toast(updated.enabled ? "Lembretes ativados!" : "Lembretes desativados", "success");
   };
 
-  const updateReminderTime = (id: string, time: string) => {
+  const updateReminderTime = async (id: string, time: string) => {
     const updated = {
       ...reminders,
       reminders: reminders.reminders.map((r) => (r.id === id ? { ...r, time } : r)),
     };
     setReminders(updated);
     saveReminderConfig(updated);
+    if (user?._id && reminders.enabled) {
+      await syncRemindersToServer(user._id, updated);
+    }
   };
 
   return (
@@ -149,6 +190,10 @@ export default function PerfilPage() {
             />
           </div>
 
+          {pushLoading && (
+            <p className="text-sm text-gray-400 mb-3">Configurando notificações...</p>
+          )}
+
           {reminders.enabled && (
             <div className="flex flex-col gap-3">
               {reminders.reminders.map((r) => (
@@ -165,8 +210,8 @@ export default function PerfilPage() {
                   />
                 </div>
               ))}
-              <p className="text-xs text-gray-400">
-                Mantenha o app instalado no celular para receber os lembretes.
+              <p className="text-xs text-gray-400 leading-relaxed">
+                Instale o app na tela inicial e mantenha as notificações ativas. Os lembretes chegam mesmo com o app fechado.
               </p>
             </div>
           )}

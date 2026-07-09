@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { APP_NAME, APP_ICON } from "@/lib/brand";
 import Image from "next/image";
 import { Heart } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -54,14 +55,14 @@ export default function LoginPage() {
         <div className="flex flex-col items-center gap-3 text-center">
           <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-brand-600 shadow-lg">
             <Image
-              src="/icons/icon-192.png"
-              alt="Saudável Glicose"
-              width={56}
-              height={56}
+              src={APP_ICON}
+              alt={APP_NAME}
+              width={80}
+              height={80}
               className="rounded-2xl"
             />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Saudável Glicose</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{APP_NAME}</h1>
           <p className="text-sm text-gray-500 leading-relaxed">
             Controle sua glicemia durante a gestação com carinho e praticidade 💗
           </p>

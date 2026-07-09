@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { Heart } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getFirstName } from "@/lib/utils";
+import { APP_NAME } from "@/lib/brand";
 
 interface HeaderProps {
   title?: string;
@@ -25,7 +26,7 @@ export function Header({ title, subtitle }: HeaderProps) {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-medium text-brand-600 uppercase tracking-wide">
-              Saudável Glicose
+              {APP_NAME}
             </p>
             <h1 className="truncate text-lg font-bold text-gray-900">
               {title ?? `Olá, ${getFirstName(user?.name)}! 💗`}

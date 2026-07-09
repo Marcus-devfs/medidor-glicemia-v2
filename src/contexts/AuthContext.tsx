@@ -11,11 +11,6 @@ import {
 } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { api, setAuthToken } from "@/lib/api";
-import {
-  requestNotificationPermission,
-  startReminderScheduler,
-  stopReminderScheduler,
-} from "@/lib/notifications";
 import type { LoginCredentials, RegisterData, User } from "@/types";
 
 interface AuthContextValue {
@@ -62,7 +57,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("token");
     setAuthToken(null);
     setUser(null);
-    stopReminderScheduler();
     router.push("/login");
   }, [router]);
 
@@ -74,8 +68,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem("token", data.token);
         setAuthToken(data.token);
         setUser(data);
-        await requestNotificationPermission();
-        startReminderScheduler();
         return true;
       } catch {
         return false;
@@ -109,8 +101,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setAuthToken(token);
         const { data } = await api.post<User>("/user/loginToken");
         setUser(data);
-        await requestNotificationPermission();
-        startReminderScheduler();
       } catch {
         localStorage.removeItem("token");
         setAuthToken(null);
@@ -119,7 +109,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
     restoreSession();
-    return () => stopReminderScheduler();
   }, []);
 
   useEffect(() => {

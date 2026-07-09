@@ -1,7 +1,8 @@
 import type { ReminderConfig } from "@/types";
+import { APP_ICON } from "@/lib/brand";
 import { GLUCOSE_PERIODS } from "./utils";
 
-const STORAGE_KEY = "glicose-reminders";
+const STORAGE_KEY = "gestaglic-reminders";
 
 export const DEFAULT_REMINDERS: ReminderConfig = {
   enabled: true,
@@ -44,8 +45,8 @@ export function showNotification(title: string, body: string, tag?: string) {
       reg.showNotification(title, {
         body,
         tag,
-        icon: "/icons/icon-192.png",
-        badge: "/icons/icon-192.png",
+        icon: APP_ICON,
+        badge: APP_ICON,
         data: { url: "/medicao" },
       } as NotificationOptions);
     });
@@ -55,7 +56,7 @@ export function showNotification(title: string, body: string, tag?: string) {
   new Notification(title, {
     body,
     tag,
-    icon: "/icons/icon-192.png",
+    icon: APP_ICON,
   });
 }
 
@@ -90,7 +91,7 @@ export function startReminderScheduler() {
         firedToday.add(key);
         const periodInfo = GLUCOSE_PERIODS.find((p) => p.value === reminder.period);
         showNotification(
-          "Hora de medir a glicemia 💗",
+          "GestaGlic · Hora de medir a glicemia 💗",
           `${periodInfo?.icon ?? ""} ${reminder.label}`,
           key
         );
