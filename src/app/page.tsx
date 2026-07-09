@@ -1,101 +1,105 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Baby, Bell, ChevronRight } from "lucide-react";
+import { Header } from "@/components/layout/Header";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { SummaryCard } from "@/components/charts/SummaryCard";
+import { GlucoseChart } from "@/components/charts/GlucoseChartLazy";
+import { useAuth } from "@/contexts/AuthContext";
+import { api } from "@/lib/api";
+import { calcAverage } from "@/lib/glucose";
+import { TARGET_INFO } from "@/lib/utils";
+import type { Medicao } from "@/types";
+
+export default function HomePage() {
+  const { user } = useAuth();
+  const [medias, setMedias] = useState({ jejum: 0, apos: 0 });
+  const [recent, setRecent] = useState<Medicao[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      if (!user?._id) return;
+      try {
+        const [mediaRes, listRes] = await Promise.all([
+          api.get(`/marking/list/media/${user._id}?year=todos`),
+          api.get<Medicao[]>(`/marking/list/${user._id}`),
+        ]);
+        const { jejum, aposLanch } = mediaRes.data;
+        setMedias({
+          jejum: calcAverage(jejum.map((m: Medicao) => m.value)),
+          apos: calcAverage(aposLanch.map((m: Medicao) => m.value)),
+        });
+        setRecent(
+          [...listRes.data]
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+            .slice(0, 5)
+        );
+      } catch {
+        // silently fail on home
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, [user?._id]);
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <div className="mx-auto max-w-lg">
+      <Header subtitle="Cuide da sua saúde e do seu bebê" />
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      <main className="flex flex-col gap-5 px-4 pb-4">
+        <Card className="bg-gradient-to-br from-brand-500 to-brand-700 text-white border-0">
+          <div className="flex items-start gap-3">
+            <Baby className="h-8 w-8 shrink-0 opacity-90" />
+            <div>
+              <h2 className="font-bold text-lg">Diabetes Gestacional</h2>
+              <p className="text-sm text-brand-100 mt-1 leading-relaxed">
+                Registrar suas medições regularmente ajuda você e seu médico a manter tudo sob controle durante a gestação.
+              </p>
+            </div>
+          </div>
+          <Link href="/medicao" className="mt-4 block">
+            <Button variant="secondary" fullWidth className="bg-white text-brand-700 hover:bg-brand-50">
+              Fazer medição agora
+            </Button>
+          </Link>
+        </Card>
+
+        <div className="grid grid-cols-2 gap-3">
+          <SummaryCard label="Média Jejum" value={medias.jejum} period="Jejum" icon="🌅" />
+          <SummaryCard label="Média Pós-refeição" value={medias.apos} period="Após Café" icon="🍽️" />
         </div>
+
+        <Card>
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="font-semibold text-gray-900">Evolução recente</h3>
+            <Link href="/relatorio" className="flex items-center gap-1 text-sm text-brand-600 font-medium">
+              Ver mais <ChevronRight className="h-4 w-4" />
+            </Link>
+          </div>
+          {loading ? (
+            <div className="h-48 flex items-center justify-center text-gray-400 text-sm">Carregando...</div>
+          ) : (
+            <GlucoseChart data={recent} />
+          )}
+        </Card>
+
+        <Card className="flex items-start gap-3">
+          <Bell className="h-5 w-5 text-brand-600 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-gray-900">Lembretes ativos</p>
+            <p className="text-xs text-gray-500 mt-1">
+              Você receberá notificações nos horários configurados para medir a glicemia. Configure em Perfil.
+            </p>
+          </div>
+        </Card>
+
+        <p className="text-xs text-center text-gray-400 px-4 leading-relaxed">{TARGET_INFO}</p>
       </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
     </div>
   );
 }

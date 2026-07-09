@@ -34,3 +34,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# PWA (gerado no build de produção)
+public/sw.js
+public/sw.js.map
+public/workbox-*.js
+public/workbox-*.js.map
