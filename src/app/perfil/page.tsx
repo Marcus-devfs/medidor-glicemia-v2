@@ -6,6 +6,7 @@ import { Header } from "@/components/layout/Header";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { Toggle } from "@/components/ui/Toggle";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import {
@@ -14,7 +15,6 @@ import {
   requestNotificationPermission,
   DEFAULT_REMINDERS,
 } from "@/lib/notifications";
-import { cn } from "@/lib/utils";
 import type { ReminderConfig } from "@/types";
 
 export default function PerfilPage() {
@@ -142,20 +142,11 @@ export default function PerfilPage() {
               <Bell className="h-5 w-5 text-brand-600" />
               <h3 className="font-semibold text-gray-900">Lembretes</h3>
             </div>
-            <button
-              onClick={toggleReminders}
-              className={cn(
-                "relative h-7 w-12 rounded-full transition-colors",
-                reminders.enabled ? "bg-brand-600" : "bg-gray-200"
-              )}
-            >
-              <span
-                className={cn(
-                  "absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform",
-                  reminders.enabled ? "translate-x-5" : "translate-x-0.5"
-                )}
-              />
-            </button>
+            <Toggle
+              checked={reminders.enabled}
+              onChange={toggleReminders}
+              label="Ativar lembretes"
+            />
           </div>
 
           {reminders.enabled && (
