@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { SummaryCard } from "@/components/charts/SummaryCard";
 import { GlucoseChart } from "@/components/charts/GlucoseChartLazy";
+import { TipsFeed } from "@/components/TipsFeed";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import { calcAverage } from "@/lib/glucose";
@@ -87,6 +88,8 @@ export default function HomePage() {
             <GlucoseChart data={recent} />
           )}
         </Card>
+
+        <TipsFeed />
 
         <Card className="flex items-start gap-3">
           <Bell className="h-5 w-5 text-brand-600 shrink-0 mt-0.5" />

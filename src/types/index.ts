@@ -60,3 +60,33 @@ export interface RegisterData {
   gender?: string;
   birthDate?: string;
 }
+
+export interface ArticlePreview {
+  _id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  category: string;
+  readMinutes: number;
+}
+
+export type ForumCategory = "Alimentação" | "Ansiedade" | "Sintomas" | "Vitórias";
+
+export interface ForumPost {
+  _id: string;
+  title: string;
+  body: string;
+  category: ForumCategory;
+  likesCount: number;
+  commentsCount: number;
+  supported?: boolean;
+  userId: { _id: string; name: string };
+  createdAt: string;
+}
+
+export interface ForumComment {
+  _id: string;
+  body: string;
+  userId: { _id: string; name: string };
+  createdAt: string;
+}
