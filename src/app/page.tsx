@@ -10,9 +10,12 @@ import { SummaryCard } from "@/components/charts/SummaryCard";
 import { GlucoseChart } from "@/components/charts/GlucoseChartLazy";
 import { TipsFeed } from "@/components/TipsFeed";
 import { CommunityFeed } from "@/components/CommunityFeed";
+import { ReportPromoBanner } from "@/components/premium/ReportPromoBanner";
+import { PremiumLimitBanner } from "@/components/premium/PremiumLimitBanner";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import { calcAverage } from "@/lib/glucose";
+import { FREE_PDF_LIMIT } from "@/lib/premium";
 import { TARGET_INFO } from "@/lib/utils";
 import type { Medicao } from "@/types";
 
@@ -49,11 +52,17 @@ export default function HomePage() {
     load();
   }, [user?._id]);
 
+  const pdfCount = user?.pdf_downloads_count ?? 0;
+  const atPdfLimit = Boolean(user && !user.is_premium && pdfCount >= FREE_PDF_LIMIT);
+
   return (
     <div className="mx-auto max-w-lg">
       <Header subtitle="Cuide da sua saúde e do seu bebê" />
 
       <main className="flex flex-col gap-5 px-4 pb-4">
+        {!user?.is_premium &&
+          (atPdfLimit ? <PremiumLimitBanner /> : <ReportPromoBanner />)}
+
         <Card className="bg-gradient-to-br from-brand-500 to-brand-700 text-white border-0">
           <div className="flex items-start gap-3">
             <Baby className="h-8 w-8 shrink-0 opacity-90" />

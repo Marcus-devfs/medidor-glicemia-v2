@@ -7,12 +7,13 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { SummaryCard } from "@/components/charts/SummaryCard";
 import { GlucoseChart } from "@/components/charts/GlucoseChartLazy";
-import { PdfLimitModal, FREE_PDF_LIMIT } from "@/components/premium/PdfLimitModal";
+import { PdfLimitModal } from "@/components/premium/PdfLimitModal";
 import { PremiumReturnHandler } from "@/components/premium/PremiumReturnHandler";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePdfExport } from "@/hooks/usePdfExport";
 import { api } from "@/lib/api";
 import { calcAverage, getGlucoseStatus, getStatusColor, getStatusLabel } from "@/lib/glucose";
+import { formatPremiumPrice, FREE_PDF_LIMIT, PREMIUM_ONE_TIME_NOTE } from "@/lib/premium";
 import { TARGET_INFO, cn } from "@/lib/utils";
 import type { Medicao } from "@/types";
 
@@ -108,6 +109,12 @@ export default function RelatorioPage() {
             <Download className="h-4 w-4" />
             {exporting ? "Gerando PDF..." : "Baixar relatório PDF"}
           </Button>
+          {user && !user.is_premium && (user.pdf_downloads_count ?? 0) >= FREE_PDF_LIMIT && (
+            <p className="text-[10px] text-white/90 text-center mt-2 leading-relaxed">
+              Limite gratuito atingido · desbloqueie ilimitado com pagamento único de{" "}
+              {formatPremiumPrice()}. {PREMIUM_ONE_TIME_NOTE}
+            </p>
+          )}
           {user && !user.is_premium && (user.pdf_downloads_count ?? 0) < FREE_PDF_LIMIT && (
             <p className="text-[10px] text-white/70 text-center mt-2">
               {FREE_PDF_LIMIT - (user.pdf_downloads_count ?? 0)} PDF
