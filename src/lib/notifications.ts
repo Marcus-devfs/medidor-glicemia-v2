@@ -5,7 +5,7 @@ import { GLUCOSE_PERIODS } from "./utils";
 const STORAGE_KEY = "gestaglic-reminders";
 
 export const DEFAULT_REMINDERS: ReminderConfig = {
-  enabled: true,
+  enabled: false,
   reminders: [
     { id: "1", period: "Jejum", time: "07:00", label: "Medir glicemia em jejum" },
     { id: "2", period: "Após Café", time: "09:30", label: "Medir glicemia após o café" },

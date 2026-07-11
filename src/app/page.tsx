@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Baby, Bell, ChevronRight } from "lucide-react";
+import { Baby, ChevronRight } from "lucide-react";
 import { Header } from "@/components/layout/Header";
+import { RemindersCard } from "@/components/RemindersCard";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { SummaryCard } from "@/components/charts/SummaryCard";
@@ -103,15 +104,7 @@ export default function HomePage() {
 
         <CommunityFeed />
 
-        <Card className="flex items-start gap-3">
-          <Bell className="h-5 w-5 text-brand-600 shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-semibold text-gray-900">Lembretes ativos</p>
-            <p className="text-xs text-gray-500 mt-1">
-              Você receberá notificações nos horários configurados para medir a glicemia. Configure em Perfil.
-            </p>
-          </div>
-        </Card>
+        <RemindersCard />
 
         <p className="text-xs text-center text-gray-400 px-4 leading-relaxed">{TARGET_INFO}</p>
       </main>
