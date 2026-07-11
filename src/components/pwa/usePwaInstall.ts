@@ -43,7 +43,7 @@ export function usePwaInstall(forceInstall = false) {
 
     window.addEventListener("beforeinstallprompt", handler);
 
-    if (forceInstall && isIosDevice() && !localStorage.getItem(IOS_DISMISS_KEY)) {
+    if (forceInstall && isIosDevice()) {
       setShowIosModal(true);
     }
 
