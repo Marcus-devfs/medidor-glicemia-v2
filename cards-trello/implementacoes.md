@@ -4,130 +4,119 @@ Documentação de cada feature implementada a partir de `features.md`.
 
 ---
 
-## 1. Feature — Exportação de PDF do Histórico
+## 1. Feature — Exportação de PDF do Relatório
 
-**Status:** ✅ Implementado
+**Status:** ✅ Implementado (atualizado)
 
 ### O que foi feito
-- Substituída a exportação Excel (`.xlsx`) por PDF na aba **Histórico**.
-- PDF gerado com cabeçalho rosa (marca GestaGlic), nome da paciente e ID da gestação (últimos 8 caracteres do `_id` do usuário).
-- Tabela pivotada por **data** (linhas) e **período** (colunas: Jejum, Pós-Café, Pós-Almoço, Pós-Jantar) para leitura rápida pela médica.
-- Rodapé com metas gestacionais de referência.
+- Exportação PDF movida para a aba **Relatório** (`/relatorio`) — local correto para levar à médica.
+- Layout profissional com **logo GestaGlic**, cabeçalho rosa, dados da paciente e ID da gestação.
+- Cards de resumo: média jejum, média pós-refeição, % dentro da meta, total de medições.
+- Tabela pivotada por **data × período** com valores coloridos (verde/amarelo/vermelho).
+- Seção "Resumo por Período" com médias e status.
+- Rodapé com metas gestacionais e crédito GestaGlic.
+- Botão removido do Histórico (foco em busca/edição).
 
 ### Arquivos
 | Arquivo | Descrição |
 |---------|-----------|
-| `src/lib/pdf.ts` | Geração do PDF com jsPDF + jspdf-autotable |
-| `src/app/historico/page.tsx` | Botão de download aciona `exportPdf()` |
-
-### Dependências adicionadas
-- `jspdf`
-- `jspdf-autotable`
+| `src/lib/pdf.ts` | `generateReportPdf()` — layout profissional |
+| `src/hooks/usePdfExport.ts` | Hook reutilizável (API + limite + toast) |
+| `src/app/relatorio/page.tsx` | Card CTA + botão "Baixar relatório PDF" |
 
 ---
 
 ## 2. Dev/UX — Banner de Instalação (PWA Prompt)
 
-**Status:** ✅ Implementado
+**Status:** ✅ Movido para LP
 
-### O que foi feito
-- Hook `usePwaInstall` captura o evento `beforeinstallprompt` e guarda o prompt deferido.
-- Banner fixo no topo: *"Instalar o GestaGlic no seu celular (Grátis)"* com botão **Instalar** e opção de fechar (persiste dismiss em `localStorage`).
-- PWA já configurado via `@ducanh2912/next-pwa` + `manifest.webmanifest` + service worker customizado em `worker/index.js`.
-- Banner não aparece se o app já estiver instalado (`display-mode: standalone`) ou na tela de login.
+- Removido do app (`app.gestaglic.com.br`) — o app é ferramenta logada, não marketing.
+- Banner + modal de instalação agora ficam na **landing page** (`gestaglic.com.br`).
+- LP orienta instalar o app em `app.gestaglic.com.br` (Android Chrome + iOS Safari).
 
-### Arquivos
+### Arquivos (LP)
 | Arquivo | Descrição |
 |---------|-----------|
-| `src/components/pwa/usePwaInstall.ts` | Hook com lógica de instalação |
-| `src/components/pwa/InstallBanner.tsx` | UI do banner |
-| `src/components/pwa/PwaInstallProvider.tsx` | Provider global |
-| `src/components/layout/AppShell.tsx` | Monta o provider |
+| `lp-gestaglic/src/components/InstallPromptBanner.tsx` | Banner mobile no topo |
+| `lp-gestaglic/src/components/InstallModal.tsx` | Modal iOS + Android |
 
 ---
 
 ## 3. UI/UX — Modal de Instrução Visual (iOS vs Android)
 
-**Status:** ✅ Implementado
+**Status:** ✅ Na LP
 
-### O que foi feito
-- Modal exibido automaticamente para usuárias de **iPhone/iPad** (Safari) após 2 segundos, pois o iOS não suporta `beforeinstallprompt`.
-- Passo a passo visual com ícones do Safari: **Compartilhar** → **Adicionar à Tela de Início** → **Adicionar**.
-- Dismiss persistido em `localStorage` (`gestaglic_ios_install_dismissed`).
-- Não aparece se o app já estiver instalado como PWA.
-
-### Arquivos
-| Arquivo | Descrição |
-|---------|-----------|
-| `src/components/pwa/IosInstallModal.tsx` | Modal com instruções visuais |
-| `src/components/pwa/usePwaInstall.ts` | Detecção iOS + controle de exibição |
+- Modal unificado com passos visuais para **iPhone (Safari)** e **Android (Chrome)**.
+- Detecta plataforma automaticamente; em desktop mostra ambos.
+- Link direto para `app.gestaglic.com.br/login`.
 
 ---
 
 ## 4. Regra de Negócio — Contador de Downloads de PDF
 
-**Status:** ✅ Implementado
+**Status:** ✅ Implementado (sem alteração)
 
-### O que foi feito
-- Novos campos no modelo `User` (MongoDB):
-  - `pdf_downloads_count` — `Number`, default `0`
-  - `is_premium` — `Boolean`, default `false`
-- Endpoint `POST /user/pdf-download/:id` (autenticado):
-  - Se `is_premium === true` → permite download sem incrementar.
-  - Se `pdf_downloads_count >= 2` → retorna `403` com `limit_reached: true`.
-  - Caso contrário → incrementa contador e retorna sucesso.
-- Frontend atualiza o usuário no contexto após download bem-sucedido.
-
-### Arquivos (API)
-| Arquivo | Descrição |
-|---------|-----------|
-| `api-glicemia/src/models/User.js` | Campos novos no schema |
-| `api-glicemia/src/controllers/UserController.js` | Método `registerPdfDownload` |
-| `api-glicemia/src/routes/index.js` | Rota `POST /user/pdf-download/:id` |
-
-### Arquivos (App)
-| Arquivo | Descrição |
-|---------|-----------|
-| `src/types/index.ts` | Tipos `pdf_downloads_count` e `is_premium` no `User` |
-| `src/app/historico/page.tsx` | Chama API antes de gerar PDF |
+- Campos `pdf_downloads_count` e `is_premium` no User.
+- Endpoint `POST /user/pdf-download/:id`.
 
 ---
 
-## 5. UI/UX — Tela de Limite Atingido (Gatilho dos R$ 9,90)
+## 5. UI/UX — Tela de Limite Atingido (R$ 9,90)
 
-**Status:** ✅ Implementado
+**Status:** ✅ Implementado (sem alteração)
 
-### O que foi feito
-- Modal carinhoso exibido quando a usuária tenta baixar o 3º PDF (contador ≥ 2 e `is_premium === false`).
-- Texto conforme card do Trello, com chave Pix e instrução para enviar comprovante.
-- PDF **não é gerado** quando o limite é atingido.
-
-### Arquivos
-| Arquivo | Descrição |
-|---------|-----------|
-| `src/components/premium/PdfLimitModal.tsx` | Modal de paywall |
-| `src/app/historico/page.tsx` | Abre modal em resposta ao `403 limit_reached` |
+- Modal na tela de Relatório ao tentar o 3º download.
 
 ---
 
-## Fluxo completo do download de PDF
+## Arquitetura de domínios
 
+| Domínio | Projeto | Função |
+|---------|---------|--------|
+| **gestaglic.com.br** | `lp-gestaglic` | Landing page, marketing, instalar app |
+| **app.gestaglic.com.br** | `app_v2` | App logado (medições, relatório, PDF) |
+| API | `api-glicemia` | Backend |
+
+---
+
+## Setup da LP
+
+```bash
+cd lp-gestaglic
+cp -r ../app_v2/public/icons public/
+npm install
+npm run dev   # localhost:3002
 ```
-Usuária clica em Download (Histórico)
-        │
-        ▼
-POST /user/pdf-download/:id
-        │
-        ├─ is_premium? ──► Gera PDF (sem incrementar)
-        │
-        ├─ count >= 2? ──► Abre PdfLimitModal (sem PDF)
-        │
-        └─ count < 2 ──► Incrementa contador → Gera PDF → Toast sucesso
+
+Deploy separado: gestaglic.com.br → LP, app.gestaglic.com.br → app_v2.
+
+---
+
+## 6. Recuperação de senha (Esqueci minha senha)
+
+**Status:** ✅ Implementado
+
+### E-mail: Resend (não SendGrid)
+
+- Provedor: [Resend](https://resend.com) — 3.000 e-mails/mês grátis
+- Configuração: `api-glicemia/docs/email-resend-setup.md`
+
+### Endpoints
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| POST | `/user/forgot-password` | Envia link por e-mail |
+| POST | `/user/reset-password` | Define nova senha |
+
+### Páginas app
+
+- `/recuperar-senha` — solicitar link
+- `/redefinir-senha?token=...` — nova senha (link expira em 1h)
+
+### Variáveis de ambiente
+
+```env
+RESEND_API_KEY=re_...
+EMAIL_FROM=noreply@gestaglic.com.br
+APP_URL=https://app.gestaglic.com.br
 ```
-
-## Próximos passos sugeridos (não implementados)
-
-- [ ] Endpoint admin para marcar usuária como `is_premium: true` após Pix
-- [ ] Integração automática com gateway de pagamento (Mercado Pago / Stripe Pix)
-- [ ] Remover dependências `xlsx` e `file-saver` (não mais usadas)
-- [ ] Botão manual "Como instalar" no Perfil para reabrir modal iOS

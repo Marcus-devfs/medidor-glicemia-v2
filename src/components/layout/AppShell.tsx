@@ -6,12 +6,14 @@ import { BottomNav } from "./BottomNav";
 import { Toast } from "@/components/ui/Toast";
 import { PwaInstallProvider } from "@/components/pwa/PwaInstallProvider";
 
+const PUBLIC_PATHS = ["/login", "/recuperar-senha", "/redefinir-senha"];
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { loading, user } = useAuth();
   const pathname = usePathname();
-  const isLogin = pathname === "/login";
+  const isPublic = PUBLIC_PATHS.includes(pathname);
 
-  if (loading || (!user && !isLogin)) {
+  if (loading || (!user && !isPublic)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-brand-50">
         <div className="flex flex-col items-center gap-4">
@@ -25,8 +27,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <>
       <PwaInstallProvider />
-      <div className={isLogin ? "min-h-screen" : "min-h-screen pb-24"}>{children}</div>
-      <BottomNav />
+      <div className={isPublic ? "min-h-screen" : "min-h-screen pb-24"}>{children}</div>
+      {!isPublic && <BottomNav />}
       <Toast />
     </>
   );

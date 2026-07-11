@@ -23,10 +23,11 @@ export function isStandalone() {
   );
 }
 
-export function usePwaInstall() {
+export function usePwaInstall(forceInstall = false) {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showBanner, setShowBanner] = useState(false);
   const [showIosModal, setShowIosModal] = useState(false);
+  const [installReady, setInstallReady] = useState(false);
 
   useEffect(() => {
     if (isStandalone()) return;
@@ -34,6 +35,7 @@ export function usePwaInstall() {
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
+      setInstallReady(true);
       if (!localStorage.getItem(DISMISS_KEY)) {
         setShowBanner(true);
       }
@@ -41,7 +43,15 @@ export function usePwaInstall() {
 
     window.addEventListener("beforeinstallprompt", handler);
 
-    if (isIosDevice() && !localStorage.getItem(IOS_DISMISS_KEY)) {
+    if (forceInstall && isIosDevice() && !localStorage.getItem(IOS_DISMISS_KEY)) {
+      setShowIosModal(true);
+    }
+
+    if (forceInstall && !isIosDevice() && !localStorage.getItem(DISMISS_KEY)) {
+      setShowBanner(true);
+    }
+
+    if (isIosDevice() && !forceInstall && !localStorage.getItem(IOS_DISMISS_KEY)) {
       const timer = setTimeout(() => setShowIosModal(true), 2000);
       return () => {
         window.removeEventListener("beforeinstallprompt", handler);
@@ -50,7 +60,7 @@ export function usePwaInstall() {
     }
 
     return () => window.removeEventListener("beforeinstallprompt", handler);
-  }, []);
+  }, [forceInstall]);
 
   const install = useCallback(async () => {
     if (!deferredPrompt) return false;
@@ -71,20 +81,12 @@ export function usePwaInstall() {
     setShowIosModal(false);
   }, []);
 
-  const openIosModal = useCallback(() => {
-    if (isIosDevice() && !isStandalone()) {
-      setShowIosModal(true);
-    }
-  }, []);
-
   return {
-    showBanner: showBanner && !!deferredPrompt && !isStandalone(),
+    showBanner: showBanner && !isStandalone() && (installReady || forceInstall),
     showIosModal: showIosModal && isIosDevice() && !isStandalone(),
-    isIos: isIosDevice(),
-    isStandalone: isStandalone(),
+    installReady,
     install,
     dismissBanner,
     dismissIosModal,
-    openIosModal,
   };
 }

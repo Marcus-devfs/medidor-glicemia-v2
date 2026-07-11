@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { APP_NAME, APP_ICON } from "@/lib/brand";
 import Image from "next/image";
 import { Heart } from "lucide-react";
@@ -109,6 +110,16 @@ export default function LoginPage() {
               placeholder="••••••"
               required
             />
+            {mode === "login" && (
+              <div className="text-right -mt-2">
+                <Link
+                  href="/recuperar-senha"
+                  className="text-xs text-brand-600 hover:text-brand-700 font-medium"
+                >
+                  Esqueci minha senha
+                </Link>
+              </div>
+            )}
             {mode === "register" && (
               <Input
                 label="Telefone (opcional)"

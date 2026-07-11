@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/Button";
 interface InstallBannerProps {
   onInstall: () => void;
   onDismiss: () => void;
+  installReady?: boolean;
 }
 
-export function InstallBanner({ onInstall, onDismiss }: InstallBannerProps) {
+export function InstallBanner({ onInstall, onDismiss, installReady = true }: InstallBannerProps) {
   return (
     <div className="fixed top-0 inset-x-0 z-40 safe-top">
       <div className="mx-auto max-w-lg px-3 pt-3">
@@ -20,12 +21,15 @@ export function InstallBanner({ onInstall, onDismiss }: InstallBannerProps) {
             <p className="text-sm font-bold leading-tight">
               Instalar o GestaGlic no seu celular
             </p>
-            <p className="text-xs text-white/80 mt-0.5">Grátis · Acesso rápido e lembretes</p>
+            <p className="text-xs text-white/80 mt-0.5">
+              {installReady ? "Grátis · Toque em Instalar" : "Preparando instalação..."}
+            </p>
           </div>
           <Button
             size="sm"
             onClick={onInstall}
-            className="shrink-0 bg-white text-brand-600 hover:bg-brand-50 border-0"
+            disabled={!installReady}
+            className="shrink-0 bg-white text-brand-600 hover:bg-brand-50 border-0 disabled:opacity-60"
           >
             Instalar
           </Button>

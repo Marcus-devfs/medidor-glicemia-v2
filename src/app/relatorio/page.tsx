@@ -1,11 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Download, FileText } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 import { SummaryCard } from "@/components/charts/SummaryCard";
 import { GlucoseChart } from "@/components/charts/GlucoseChartLazy";
+import { PdfLimitModal } from "@/components/premium/PdfLimitModal";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePdfExport } from "@/hooks/usePdfExport";
 import { api } from "@/lib/api";
 import { calcAverage, getGlucoseStatus, getStatusColor, getStatusLabel } from "@/lib/glucose";
 import { TARGET_INFO, cn } from "@/lib/utils";
@@ -19,6 +23,7 @@ const years = [
 
 export default function RelatorioPage() {
   const { user } = useAuth();
+  const { exportPdf, exporting, showLimitModal, setShowLimitModal } = usePdfExport();
   const [year, setYear] = useState("todos");
   const [allMarkings, setAllMarkings] = useState<Medicao[]>([]);
   const [medias, setMedias] = useState({ jejum: 0, apos: 0, total: 0 });
@@ -60,11 +65,55 @@ export default function RelatorioPage() {
   ).length;
   const pct = allMarkings.length ? Math.round((inTarget / allMarkings.length) * 100) : 0;
 
+  const handleExportPdf = () => {
+    exportPdf(allMarkings, {
+      year,
+      stats: {
+        jejumAvg: medias.jejum,
+        aposAvg: medias.apos,
+        inTargetPct: pct,
+        total: allMarkings.length,
+      },
+    });
+  };
+
   return (
     <div className="mx-auto max-w-lg">
       <Header title="Relatório" subtitle="Acompanhe sua evolução" />
 
       <main className="flex flex-col gap-5 px-4 pb-4">
+        <Card className="bg-gradient-to-br from-brand-600 to-brand-500 text-white border-0">
+          <div className="flex items-start gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/20">
+              <FileText className="h-5 w-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-bold text-base">Relatório para consulta</h3>
+              <p className="text-xs text-white/80 mt-1 leading-relaxed">
+                Exporte um PDF profissional com logo GestaGlic, resumo e tabela por data e período
+                — pronto para levar à médica.
+              </p>
+            </div>
+          </div>
+          <Button
+            onClick={handleExportPdf}
+            disabled={exporting || loading || allMarkings.length === 0}
+            fullWidth
+            className="mt-4 bg-white text-brand-600 hover:bg-brand-50 border-0"
+          >
+            <Download className="h-4 w-4" />
+            {exporting ? "Gerando PDF..." : "Baixar relatório PDF"}
+          </Button>
+          {user && !user.is_premium && (user.pdf_downloads_count ?? 0) < 2 && (
+            <p className="text-[10px] text-white/70 text-center mt-2">
+              {2 - (user.pdf_downloads_count ?? 0)} PDF
+              {2 - (user.pdf_downloads_count ?? 0) === 1 ? "" : "s"} gratuito
+              {2 - (user.pdf_downloads_count ?? 0) === 1 ? "" : "s"} restante
+              {2 - (user.pdf_downloads_count ?? 0) === 1 ? "" : "s"}
+            </p>
+          )}
+        </Card>
+
         <div className="flex gap-2">
           {years.map((y) => (
             <button
@@ -146,6 +195,8 @@ export default function RelatorioPage() {
 
         <p className="text-xs text-center text-gray-400 px-2 leading-relaxed">{TARGET_INFO}</p>
       </main>
+
+      <PdfLimitModal open={showLimitModal} onClose={() => setShowLimitModal(false)} />
     </div>
   );
 }
