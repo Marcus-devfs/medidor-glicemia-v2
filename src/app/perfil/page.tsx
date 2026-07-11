@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Bell, LogOut, User as UserIcon } from "lucide-react";
 import { Header } from "@/components/layout/Header";
+import { PremiumBadge } from "@/components/premium/PremiumBadge";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -141,8 +142,16 @@ export default function PerfilPage() {
             <UserIcon className="h-8 w-8" />
           </div>
           <div>
-            <p className="font-bold text-gray-900">{user?.name}</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="font-bold text-gray-900">{user?.name}</p>
+              {user?.is_premium && <PremiumBadge />}
+            </div>
             <p className="text-sm text-gray-500">{user?.email}</p>
+            {user?.is_premium && (
+              <p className="text-xs text-amber-800/80 mt-1.5 leading-relaxed">
+                Relatórios PDF ilimitados · pagamento único ativo
+              </p>
+            )}
           </div>
         </Card>
 

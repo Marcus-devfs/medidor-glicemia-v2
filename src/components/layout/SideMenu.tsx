@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { BookOpen, ChevronRight, Users, X } from "lucide-react";
 import { LP_URL } from "@/lib/brand";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { PremiumBadge } from "@/components/premium/PremiumBadge";
 
 interface SideMenuProps {
   open: boolean;
@@ -30,6 +32,7 @@ const LINKS = [
 
 export function SideMenu({ open, onClose }: SideMenuProps) {
   const pathname = usePathname();
+  const { user } = useAuth();
 
   return (
     <>
@@ -104,6 +107,13 @@ export function SideMenu({ open, onClose }: SideMenuProps) {
             );
           })}
         </nav>
+
+        {user && (
+          <div className="border-t border-gray-100 px-4 py-3">
+            <p className="text-xs text-gray-500 truncate">{user.name}</p>
+            {user.is_premium && <PremiumBadge className="mt-1.5" />}
+          </div>
+        )}
       </aside>
     </>
   );
