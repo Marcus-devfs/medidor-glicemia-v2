@@ -7,7 +7,10 @@ import { ArrowLeft } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Textarea } from "@/components/ui/Textarea";
 import { api } from "@/lib/api";
+import { cn } from "@/lib/utils";
 import type { ForumCategory } from "@/types";
 
 const CATEGORIES: ForumCategory[] = [
@@ -58,50 +61,52 @@ export default function NovoPostPage() {
 
         <Card>
           <form onSubmit={submit} className="space-y-4">
-            <div>
-              <label className="text-xs font-semibold text-gray-500">Categoria</label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value as ForumCategory)}
-                className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm"
-              >
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-gray-700">Categoria</label>
+              <div className="grid grid-cols-2 gap-2">
                 {CATEGORIES.map((c) => (
-                  <option key={c} value={c}>{c}</option>
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setCategory(c)}
+                    className={cn(
+                      "rounded-xl border-2 px-3 py-3 text-sm font-medium transition-all",
+                      category === c
+                        ? "border-brand-500 bg-brand-50 text-brand-700"
+                        : "border-gray-200 bg-white text-gray-600"
+                    )}
+                  >
+                    {c}
+                  </button>
                 ))}
-              </select>
+              </div>
             </div>
 
-            <div>
-              <label className="text-xs font-semibold text-gray-500">Título</label>
-              <input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                maxLength={120}
-                required
-                className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm"
-                placeholder="Ex: Consegui manter a glicemia estável hoje!"
-              />
-            </div>
+            <Input
+              label="Título"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              maxLength={120}
+              required
+              placeholder="Ex: Consegui manter a glicemia estável hoje!"
+            />
 
-            <div>
-              <label className="text-xs font-semibold text-gray-500">Texto</label>
-              <textarea
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                maxLength={2000}
-                required
-                rows={6}
-                className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm resize-none"
-                placeholder="Conte sua experiência..."
-              />
-            </div>
+            <Textarea
+              label="Texto"
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              maxLength={2000}
+              required
+              rows={6}
+              placeholder="Conte sua experiência..."
+            />
 
             <label className="flex items-start gap-2 text-xs text-gray-600">
               <input
                 type="checkbox"
                 checked={accepted}
                 onChange={(e) => setAccepted(e.target.checked)}
-                className="mt-0.5"
+                className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300"
               />
               Entendo que este espaço não substitui orientação médica e que desinformação pode ser prejudicial.
             </label>

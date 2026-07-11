@@ -7,6 +7,7 @@ import { ArrowLeft, Flag, Heart } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { Textarea } from "@/components/ui/Textarea";
 import { api } from "@/lib/api";
 import { cn, formatDateBR } from "@/lib/utils";
 import type { ForumComment, ForumPost } from "@/types";
@@ -135,13 +136,12 @@ export default function PostDetailPage() {
 
         <Card>
           <form onSubmit={submitComment} className="space-y-3">
-            <textarea
+            <Textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               rows={3}
               maxLength={1000}
               placeholder="Escreva um comentário de apoio..."
-              className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm resize-none"
             />
             <Button type="submit" fullWidth disabled={submitting} size="sm">
               {submitting ? "Enviando..." : "Comentar"}

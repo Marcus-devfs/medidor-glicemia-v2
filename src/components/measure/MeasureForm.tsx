@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { GLUCOSE_PERIODS } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { Textarea } from "@/components/ui/Textarea";
 import { Card } from "@/components/ui/Card";
 import type { Medicao, MedicaoForm } from "@/types";
 import { cn } from "@/lib/utils";
@@ -119,11 +120,12 @@ export function MeasureForm({
 
       <Input
         label="Valor (mg/dL)"
-        type="number"
+        type="text"
         inputMode="numeric"
+        autoComplete="off"
         placeholder="Ex: 95"
         value={form.value}
-        onChange={(e) => setForm({ ...form, value: e.target.value })}
+        onChange={(e) => setForm({ ...form, value: e.target.value.replace(/\D/g, "") })}
         required
       />
 
@@ -151,16 +153,13 @@ export function MeasureForm({
         </div>
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-gray-700">O que comeu? (opcional)</label>
-        <textarea
-          value={form.food}
-          onChange={(e) => setForm({ ...form, food: e.target.value })}
-          rows={3}
-          placeholder="Descreva o que consumiu..."
-          className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-base placeholder:text-gray-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100 resize-none"
-        />
-      </div>
+      <Textarea
+        label="O que comeu? (opcional)"
+        value={form.food}
+        onChange={(e) => setForm({ ...form, food: e.target.value })}
+        rows={3}
+        placeholder="Descreva o que consumiu..."
+      />
 
       {mode === "create" && (
         <Card className="bg-brand-50 border-brand-100">

@@ -1,27 +1,26 @@
 import { cn } from "@/lib/utils";
-import { type InputHTMLAttributes, forwardRef } from "react";
+import { type TextareaHTMLAttributes, forwardRef } from "react";
 import { formControlClass, formLabelClass } from "@/lib/formStyles";
 
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
   error?: string;
 }
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, label, error, id, type, ...props }, ref) => (
+export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
+  ({ className, label, error, id, ...props }, ref) => (
     <div className="flex flex-col gap-1.5">
       {label && (
         <label htmlFor={id} className={formLabelClass}>
           {label}
         </label>
       )}
-      <input
+      <textarea
         ref={ref}
         id={id}
-        type={type}
         className={cn(
           formControlClass,
-          type === "date" && "relative",
+          "min-h-[96px] resize-none py-3",
           error && "border-red-400 focus:ring-red-100",
           className
         )}
@@ -31,4 +30,4 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     </div>
   )
 );
-Input.displayName = "Input";
+Textarea.displayName = "Textarea";
