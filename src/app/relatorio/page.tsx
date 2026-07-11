@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Download, FileText } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { SummaryCard } from "@/components/charts/SummaryCard";
 import { GlucoseChart } from "@/components/charts/GlucoseChartLazy";
-import { PdfLimitModal } from "@/components/premium/PdfLimitModal";
+import { PdfLimitModal, FREE_PDF_LIMIT } from "@/components/premium/PdfLimitModal";
+import { PremiumReturnHandler } from "@/components/premium/PremiumReturnHandler";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePdfExport } from "@/hooks/usePdfExport";
 import { api } from "@/lib/api";
@@ -79,6 +80,9 @@ export default function RelatorioPage() {
 
   return (
     <div className="mx-auto max-w-lg">
+      <Suspense fallback={null}>
+        <PremiumReturnHandler />
+      </Suspense>
       <Header title="Relatório" subtitle="Acompanhe sua evolução" />
 
       <main className="flex flex-col gap-5 px-4 pb-4">
@@ -104,12 +108,17 @@ export default function RelatorioPage() {
             <Download className="h-4 w-4" />
             {exporting ? "Gerando PDF..." : "Baixar relatório PDF"}
           </Button>
-          {user && !user.is_premium && (user.pdf_downloads_count ?? 0) < 2 && (
+          {user && !user.is_premium && (user.pdf_downloads_count ?? 0) < FREE_PDF_LIMIT && (
             <p className="text-[10px] text-white/70 text-center mt-2">
-              {2 - (user.pdf_downloads_count ?? 0)} PDF
-              {2 - (user.pdf_downloads_count ?? 0) === 1 ? "" : "s"} gratuito
-              {2 - (user.pdf_downloads_count ?? 0) === 1 ? "" : "s"} restante
-              {2 - (user.pdf_downloads_count ?? 0) === 1 ? "" : "s"}
+              {FREE_PDF_LIMIT - (user.pdf_downloads_count ?? 0)} PDF
+              {FREE_PDF_LIMIT - (user.pdf_downloads_count ?? 0) === 1 ? "" : "s"} gratuito
+              {FREE_PDF_LIMIT - (user.pdf_downloads_count ?? 0) === 1 ? "" : "s"} restante
+              {FREE_PDF_LIMIT - (user.pdf_downloads_count ?? 0) === 1 ? "" : "s"}
+            </p>
+          )}
+          {user?.is_premium && (
+            <p className="text-[10px] text-white/80 text-center mt-2 font-medium">
+              Premium · PDFs ilimitados
             </p>
           )}
         </Card>
