@@ -9,6 +9,8 @@ export interface User {
   birthDate?: string;
   photoPerfil?: { url: string }[];
   token?: string;
+  pdf_downloads_count?: number;
+  is_premium?: boolean;
 }
 
 export interface Medicao {

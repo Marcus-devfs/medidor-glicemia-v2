@@ -2,27 +2,29 @@
 
 import { useEffect, useState } from "react";
 import { Search, Trash2, Pencil, Download } from "lucide-react";
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
 import { Header } from "@/components/layout/Header";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { MeasureForm } from "@/components/measure/MeasureForm";
+import { PdfLimitModal } from "@/components/premium/PdfLimitModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
+import { generateHistoryPdf } from "@/lib/pdf";
 import { formatDateBR, removeAccents } from "@/lib/utils";
 import { getGlucoseStatus, getStatusColor, getStatusLabel } from "@/lib/glucose";
 import { cn } from "@/lib/utils";
 import type { Medicao } from "@/types";
 
 export default function HistoricoPage() {
-  const { user, toast } = useAuth();
+  const { user, toast, updateUser } = useAuth();
   const [markings, setMarkings] = useState<Medicao[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [editItem, setEditItem] = useState<Medicao | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const load = async () => {
     if (!user?._id) return;
@@ -65,20 +67,43 @@ export default function HistoricoPage() {
     }
   };
 
-  const exportExcel = () => {
-    const rows = filtered.map((m) => ({
-      Data: formatDateBR(m.date),
-      Período: m.period,
-      "Valor (mg/dL)": m.value,
-      Dieta: m.diet ? "Sim" : "Não",
-      Alimentação: m.food ?? "",
-    }));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Medições");
-    const buf = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-    saveAs(new Blob([buf]), `glicemia-${formatDateBR(new Date())}.xlsx`);
-    toast("Planilha exportada!", "success");
+  const exportPdf = async () => {
+    if (!user?._id || filtered.length === 0) {
+      toast("Nenhuma medição para exportar", "error");
+      return;
+    }
+
+    setExporting(true);
+    try {
+      const { data } = await api.post<{
+        allowed: boolean;
+        limit_reached?: boolean;
+        pdf_downloads_count: number;
+        is_premium: boolean;
+      }>(`/user/pdf-download/${user._id}`);
+
+      if (!data.allowed) {
+        setShowLimitModal(true);
+        return;
+      }
+
+      generateHistoryPdf(user, filtered);
+      updateUser({
+        ...user,
+        pdf_downloads_count: data.pdf_downloads_count,
+        is_premium: data.is_premium,
+      });
+      toast("PDF exportado!", "success");
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { status?: number; data?: { limit_reached?: boolean } } };
+      if (axiosErr.response?.status === 403 && axiosErr.response?.data?.limit_reached) {
+        setShowLimitModal(true);
+      } else {
+        toast("Erro ao exportar PDF", "error");
+      }
+    } finally {
+      setExporting(false);
+    }
   };
 
   return (
@@ -96,7 +121,14 @@ export default function HistoricoPage() {
               className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-10 pr-4 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100"
             />
           </div>
-          <Button variant="secondary" size="sm" onClick={exportExcel} className="shrink-0 px-3">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={exportPdf}
+            disabled={exporting || filtered.length === 0}
+            className="shrink-0 px-3"
+            title="Exportar PDF"
+          >
             <Download className="h-4 w-4" />
           </Button>
         </div>
@@ -152,6 +184,8 @@ export default function HistoricoPage() {
           })
         )}
       </main>
+
+      <PdfLimitModal open={showLimitModal} onClose={() => setShowLimitModal(false)} />
 
       <Modal open={!!deleteId} onClose={() => setDeleteId(null)} title="Excluir medição?">
         <p className="text-sm text-gray-600 mb-4">Esta ação não pode ser desfeita.</p>

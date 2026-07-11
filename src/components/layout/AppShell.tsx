@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { BottomNav } from "./BottomNav";
 import { Toast } from "@/components/ui/Toast";
+import { PwaInstallProvider } from "@/components/pwa/PwaInstallProvider";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { loading, user } = useAuth();
@@ -23,6 +24,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <>
+      <PwaInstallProvider />
       <div className={isLogin ? "min-h-screen" : "min-h-screen pb-24"}>{children}</div>
       <BottomNav />
       <Toast />
