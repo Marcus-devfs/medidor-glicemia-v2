@@ -1,7 +1,6 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
-import { Download, FileText } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -9,7 +8,7 @@ import { SummaryCard } from "@/components/charts/SummaryCard";
 import { GlucoseChart } from "@/components/charts/GlucoseChartLazy";
 import { PdfLimitModal } from "@/components/premium/PdfLimitModal";
 import { PremiumReturnHandler } from "@/components/premium/PremiumReturnHandler";
-import { PdfTemplatePicker } from "@/components/premium/PdfTemplatePicker";
+import { ConsultReportCard } from "@/components/premium/ConsultReportCard";
 import { ShareReportCard } from "@/components/premium/ShareReportCard";
 import { WeeklySummaryCard } from "@/components/premium/WeeklySummaryCard";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,7 +17,7 @@ import { useGlucoseTargets } from "@/hooks/useGlucoseTargets";
 import { api } from "@/lib/api";
 import { calcAverage, formatTargetsLine, getGlucoseStatus, getStatusColor, getStatusLabel } from "@/lib/glucose";
 import { usePremiumSettings } from "@/contexts/PremiumSettingsContext";
-import { PREMIUM_KIT_FEATURES, PREMIUM_ONE_TIME_NOTE, type PdfTemplate } from "@/lib/premium";
+import { PREMIUM_KIT_FEATURES, type PdfTemplate } from "@/lib/premium";
 import { computeReportStats, filterMarkingsForTemplate } from "@/lib/reportStats";
 import { gestationSummary } from "@/lib/pregnancy";
 import { cn } from "@/lib/utils";
@@ -119,65 +118,18 @@ export default function RelatorioPage() {
 
         <WeeklySummaryCard />
 
-        <Card className="bg-gradient-to-br from-brand-600 to-brand-500 text-white border-0">
-          <div className="flex items-start gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/20">
-              <FileText className="h-5 w-5" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-base">Relatório para consulta</h3>
-              <p className="text-xs text-white/80 mt-1 leading-relaxed">
-                Modelos profissionais com DPP, semana gestacional e metas personalizadas — prontos
-                para sua obstetra.
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-4 rounded-xl bg-white/10 p-3">
-            <PdfTemplatePicker
-              value={pdfTemplate}
-              onChange={setPdfTemplate}
-              isPremium={!!user?.is_premium}
-              onNeedPremium={() => setShowLimitModal(true)}
-            />
-          </div>
-
-          <Button
-            onClick={handleExportPdf}
-            disabled={exporting || loading || exportMarkings.length === 0}
-            fullWidth
-            className="mt-4 bg-white text-brand-600 hover:bg-brand-50 border-0"
-          >
-            <Download className="h-4 w-4" />
-            {exporting ? "Gerando PDF..." : "Baixar relatório PDF"}
-          </Button>
-
-          {exportMarkings.length === 0 && !loading && (
-            <p className="text-[10px] text-white/80 text-center mt-2">
-              Nenhuma medição no período selecionado.
-            </p>
-          )}
-
-          {user && !user.is_premium && (user.pdf_downloads_count ?? 0) >= freePdfLimit && (
-            <p className="text-[10px] text-white/90 text-center mt-2 leading-relaxed">
-              Limite gratuito atingido · Kit Consulta Premium {formatPremiumPrice()}.{" "}
-              {PREMIUM_ONE_TIME_NOTE}
-            </p>
-          )}
-          {user && !user.is_premium && (user.pdf_downloads_count ?? 0) < freePdfLimit && (
-            <p className="text-[10px] text-white/70 text-center mt-2">
-              {freePdfLimit - (user.pdf_downloads_count ?? 0)} PDF
-              {freePdfLimit - (user.pdf_downloads_count ?? 0) === 1 ? "" : "s"} gratuito
-              {freePdfLimit - (user.pdf_downloads_count ?? 0) === 1 ? "" : "s"} restante
-              {freePdfLimit - (user.pdf_downloads_count ?? 0) === 1 ? "" : "s"}
-            </p>
-          )}
-          {user?.is_premium && (
-            <p className="text-[10px] text-white/80 text-center mt-2 font-medium">
-              Kit Consulta Premium ativo · PDFs ilimitados
-            </p>
-          )}
-        </Card>
+        <ConsultReportCard
+          user={user}
+          pdfTemplate={pdfTemplate}
+          onTemplateChange={setPdfTemplate}
+          onNeedPremium={() => setShowLimitModal(true)}
+          exportCount={exportMarkings.length}
+          loading={loading}
+          exporting={exporting}
+          onExport={handleExportPdf}
+          freePdfLimit={freePdfLimit}
+          formatPremiumPrice={formatPremiumPrice}
+        />
 
         <ShareReportCard onNeedPremium={() => setShowLimitModal(true)} />
 
