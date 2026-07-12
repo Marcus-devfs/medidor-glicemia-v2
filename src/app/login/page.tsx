@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
+import { markOnboardingPending } from "@/lib/onboarding";
 
 export default function LoginPage() {
   const { login, register, toast } = useAuth();
@@ -41,8 +42,14 @@ export default function LoginPage() {
         telephone: form.telephone,
       });
       if (ok) {
-        toast("Conta criada! Faça login.", "success");
-        setMode("login");
+        markOnboardingPending();
+        const loggedIn = await login({ email: form.email, password: form.password });
+        if (loggedIn) {
+          toast("Conta criada! Bem-vinda ao GestaGlic 💗", "success");
+        } else {
+          toast("Conta criada! Faça login para continuar.", "success");
+          setMode("login");
+        }
       } else {
         toast("Erro ao criar conta. E-mail já cadastrado?", "error");
       }

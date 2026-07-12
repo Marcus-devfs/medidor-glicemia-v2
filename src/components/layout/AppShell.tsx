@@ -7,6 +7,7 @@ import { Toast } from "@/components/ui/Toast";
 import { RefreshProvider } from "@/contexts/RefreshContext";
 import { PremiumSettingsProvider } from "@/contexts/PremiumSettingsContext";
 import { PwaInstallProvider } from "@/components/pwa/PwaInstallProvider";
+import { OnboardingProvider } from "@/components/onboarding/OnboardingProvider";
 
 const PUBLIC_PATHS = ["/login", "/recuperar-senha", "/redefinir-senha"];
 
@@ -27,7 +28,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <>
+    <OnboardingProvider>
       <PwaInstallProvider />
       <PremiumSettingsProvider>
         <RefreshProvider enabled={!isPublic}>
@@ -36,6 +37,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </PremiumSettingsProvider>
       {!isPublic && <BottomNav />}
       <Toast />
-    </>
+    </OnboardingProvider>
   );
 }

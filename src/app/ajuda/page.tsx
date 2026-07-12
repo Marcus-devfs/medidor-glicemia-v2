@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { HelpCircle, MessageSquare, Bug, Send } from "lucide-react";
+import { HelpCircle, MessageSquare, Bug, Send, Sparkles } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useOnboarding } from "@/components/onboarding/OnboardingProvider";
 import { api } from "@/lib/api";
 import { LP_URL } from "@/lib/brand";
 import { cn } from "@/lib/utils";
@@ -33,6 +34,7 @@ const CATEGORIES = [
 
 export default function AjudaPage() {
   const { toast } = useAuth();
+  const { openOnboarding } = useOnboarding();
   const [category, setCategory] = useState<(typeof CATEGORIES)[number]["id"]>("help");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -71,6 +73,21 @@ export default function AjudaPage() {
             Conte o que precisa, sugira melhorias ou avise se algo deu errado. Lemos todas as
             mensagens — em geral respondemos em até 1–2 dias úteis.
           </p>
+        </Card>
+
+        <Card className="flex items-center gap-4">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-100 text-brand-600">
+            <Sparkles className="h-5 w-5" />
+          </span>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-gray-900 text-sm">Tour do app</p>
+            <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
+              Reveja os passos: início, lembretes, medição, relatório e mais.
+            </p>
+          </div>
+          <Button variant="secondary" size="sm" onClick={openOnboarding} className="shrink-0">
+            Ver tour
+          </Button>
         </Card>
 
         {sent && (
