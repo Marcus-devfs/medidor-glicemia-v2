@@ -35,10 +35,10 @@ export const GLUCOSE_PERIODS: { label: string; value: GlucosePeriod; icon: strin
 ];
 
 export const GLUCOSE_TARGETS = {
-  jejum: 92,
+  jejum: 95,
   pos1h: 179,
   pos2h: 152,
 } as const;
 
 export const TARGET_INFO =
-  "Meta gestacional: jejum < 92 mg/dL, 1h após refeição < 179 mg/dL, 2h ≤ 152 mg/dL.";
+  "Meta gestacional: jejum < 95 mg/dL, 1h após refeição < 179 mg/dL, 2h ≤ 152 mg/dL.";

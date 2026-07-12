@@ -74,6 +74,6 @@ app_v2/
 
 ## Metas gestacionais
 
-- Jejum: < 92 mg/dL
+- Jejum: < 95 mg/dL
 - 1h após refeição: < 179 mg/dL
 - 2h após refeição: ≤ 152 mg/dL

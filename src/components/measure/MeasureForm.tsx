@@ -164,7 +164,7 @@ export function MeasureForm({
       {mode === "create" && (
         <Card className="bg-brand-50 border-brand-100">
           <p className="text-xs text-brand-700 leading-relaxed">
-            💡 <strong>Meta gestacional:</strong> jejum &lt; 92 mg/dL · 1h após refeição &lt; 179 mg/dL · 2h ≤ 152 mg/dL
+            💡 <strong>Meta gestacional:</strong> jejum &lt; 95 mg/dL · 1h após refeição &lt; 179 mg/dL · 2h ≤ 152 mg/dL
           </p>
         </Card>
       )}
