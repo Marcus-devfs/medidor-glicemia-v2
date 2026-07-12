@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, ChevronRight, Users, X } from "lucide-react";
+import { BookOpen, ChevronRight, HelpCircle, Users, X } from "lucide-react";
 import { LP_URL } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -19,6 +19,13 @@ const LINKS = [
     label: "Comunidade",
     description: "Troque experiências com outras gestantes",
     icon: Users,
+    external: false,
+  },
+  {
+    href: "/ajuda",
+    label: "Ajuda & feedback",
+    description: "Dúvidas, sugestões ou reportar problemas",
+    icon: HelpCircle,
     external: false,
   },
   {

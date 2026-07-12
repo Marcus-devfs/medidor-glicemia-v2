@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Bell, LogOut, User as UserIcon } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { PremiumBadge } from "@/components/premium/PremiumBadge";
@@ -170,6 +171,19 @@ export default function PerfilPage() {
               </p>
             </div>
           )}
+        </Card>
+
+        <Card className="flex items-center justify-between gap-3">
+          <div>
+            <p className="font-semibold text-gray-900 text-sm">Ajuda & feedback</p>
+            <p className="text-xs text-gray-500 mt-0.5">Dúvidas, sugestões ou reportar problemas</p>
+          </div>
+          <Link
+            href="/ajuda"
+            className="shrink-0 rounded-xl bg-brand-50 px-4 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-100"
+          >
+            Abrir
+          </Link>
         </Card>
 
         <Button variant="danger" fullWidth onClick={logout}>
