@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
-import { GLUCOSE_PERIODS } from "@/lib/utils";
+import { GLUCOSE_PERIODS, localDateInputValue, toDateInputValue } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
@@ -12,11 +12,9 @@ import { Card } from "@/components/ui/Card";
 import type { Medicao, MedicaoForm } from "@/types";
 import { cn } from "@/lib/utils";
 
-const today = () => new Date().toISOString().split("T")[0];
-
 function toFormData(item: Medicao): MedicaoForm {
   return {
-    date: item.date.split("T")[0],
+    date: toDateInputValue(item.date),
     period: item.period,
     value: String(item.value),
     diet: item.diet ? 1 : 0,
@@ -45,7 +43,7 @@ export function MeasureForm({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState<MedicaoForm>(
-    initialData ? toFormData(initialData) : { date: today(), period: "", value: "", diet: null, food: "" }
+    initialData ? toFormData(initialData) : { date: localDateInputValue(), period: "", value: "", diet: null, food: "" }
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -71,7 +69,7 @@ export function MeasureForm({
       } else {
         await api.post(`/marking/create/${user?._id}`, { marking });
         toast("Medição registrada com sucesso! 💗", "success");
-        setForm({ date: today(), period: "", value: "", diet: null, food: "" });
+        setForm({ date: localDateInputValue(), period: "", value: "", diet: null, food: "" });
       }
 
       onSuccess?.();

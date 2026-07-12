@@ -8,9 +8,34 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/** YYYY-MM-DD no fuso local (não use toISOString — vira dia seguinte à noite no Brasil). */
+export function localDateInputValue(date: Date = new Date()): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+/** Normaliza data da API para `<input type="date">`. */
+export function toDateInputValue(value: string): string {
+  const datePart = value.split("T")[0];
+  if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) return datePart;
+  return localDateInputValue(new Date(value));
+}
+
+/** Interpreta data de calendário (medição) no fuso local. */
+export function parseCalendarDate(date: string | Date): Date {
+  if (date instanceof Date) return date;
+  const datePart = date.split("T")[0];
+  if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+    const [y, m, d] = datePart.split("-").map(Number);
+    return new Date(y, m - 1, d);
+  }
+  return parseISO(date);
+}
+
 export function formatDateBR(date: string | Date) {
-  const d = typeof date === "string" ? parseISO(date) : date;
-  return format(d, "dd/MM/yyyy", { locale: ptBR });
+  return format(parseCalendarDate(date), "dd/MM/yyyy", { locale: ptBR });
 }
 
 export function formatDateTimeBR(date: string | Date) {

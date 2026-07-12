@@ -10,10 +10,10 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from "recharts";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Medicao } from "@/types";
-import { GLUCOSE_TARGETS } from "@/lib/utils";
+import { GLUCOSE_TARGETS, parseCalendarDate } from "@/lib/utils";
 
 interface GlucoseChartProps {
   data: Medicao[];
@@ -24,7 +24,7 @@ export function GlucoseChart({ data }: GlucoseChartProps) {
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .slice(-14)
     .map((m) => ({
-      date: format(parseISO(m.date), "dd/MM", { locale: ptBR }),
+      date: format(parseCalendarDate(m.date), "dd/MM", { locale: ptBR }),
       value: m.value,
       period: m.period,
     }));

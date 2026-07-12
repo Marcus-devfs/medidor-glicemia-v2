@@ -17,12 +17,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRegisterPageRefresh } from "@/contexts/RefreshContext";
 import { api } from "@/lib/api";
 import { calcAverage } from "@/lib/glucose";
-import { FREE_PDF_LIMIT } from "@/lib/premium";
+import { usePremiumSettings } from "@/contexts/PremiumSettingsContext";
 import { TARGET_INFO } from "@/lib/utils";
 import type { Medicao } from "@/types";
 
 export default function HomePage() {
   const { user } = useAuth();
+  const { freePdfLimit } = usePremiumSettings();
   const [medias, setMedias] = useState({ jejum: 0, apos: 0 });
   const [recent, setRecent] = useState<Medicao[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,7 +60,7 @@ export default function HomePage() {
   useRegisterPageRefresh(load);
 
   const pdfCount = user?.pdf_downloads_count ?? 0;
-  const atPdfLimit = Boolean(user && !user.is_premium && pdfCount >= FREE_PDF_LIMIT);
+  const atPdfLimit = Boolean(user && !user.is_premium && pdfCount >= freePdfLimit);
 
   return (
     <div className="mx-auto max-w-lg">

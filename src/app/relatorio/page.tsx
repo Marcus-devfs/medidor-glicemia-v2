@@ -13,7 +13,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePdfExport } from "@/hooks/usePdfExport";
 import { api } from "@/lib/api";
 import { calcAverage, getGlucoseStatus, getStatusColor, getStatusLabel } from "@/lib/glucose";
-import { formatPremiumPrice, FREE_PDF_LIMIT, PREMIUM_ONE_TIME_NOTE } from "@/lib/premium";
+import { usePremiumSettings } from "@/contexts/PremiumSettingsContext";
+import { PREMIUM_ONE_TIME_NOTE } from "@/lib/premium";
 import { TARGET_INFO, cn } from "@/lib/utils";
 import { useRegisterPageRefresh } from "@/contexts/RefreshContext";
 import type { Medicao } from "@/types";
@@ -26,6 +27,7 @@ const years = [
 
 export default function RelatorioPage() {
   const { user } = useAuth();
+  const { freePdfLimit, formatPremiumPrice } = usePremiumSettings();
   const { exportPdf, exporting, showLimitModal, setShowLimitModal } = usePdfExport();
   const [year, setYear] = useState("todos");
   const [allMarkings, setAllMarkings] = useState<Medicao[]>([]);
@@ -113,18 +115,18 @@ export default function RelatorioPage() {
             <Download className="h-4 w-4" />
             {exporting ? "Gerando PDF..." : "Baixar relatório PDF"}
           </Button>
-          {user && !user.is_premium && (user.pdf_downloads_count ?? 0) >= FREE_PDF_LIMIT && (
+          {user && !user.is_premium && (user.pdf_downloads_count ?? 0) >= freePdfLimit && (
             <p className="text-[10px] text-white/90 text-center mt-2 leading-relaxed">
               Limite gratuito atingido · desbloqueie ilimitado com pagamento único de{" "}
               {formatPremiumPrice()}. {PREMIUM_ONE_TIME_NOTE}
             </p>
           )}
-          {user && !user.is_premium && (user.pdf_downloads_count ?? 0) < FREE_PDF_LIMIT && (
+          {user && !user.is_premium && (user.pdf_downloads_count ?? 0) < freePdfLimit && (
             <p className="text-[10px] text-white/70 text-center mt-2">
-              {FREE_PDF_LIMIT - (user.pdf_downloads_count ?? 0)} PDF
-              {FREE_PDF_LIMIT - (user.pdf_downloads_count ?? 0) === 1 ? "" : "s"} gratuito
-              {FREE_PDF_LIMIT - (user.pdf_downloads_count ?? 0) === 1 ? "" : "s"} restante
-              {FREE_PDF_LIMIT - (user.pdf_downloads_count ?? 0) === 1 ? "" : "s"}
+              {freePdfLimit - (user.pdf_downloads_count ?? 0)} PDF
+              {freePdfLimit - (user.pdf_downloads_count ?? 0) === 1 ? "" : "s"} gratuito
+              {freePdfLimit - (user.pdf_downloads_count ?? 0) === 1 ? "" : "s"} restante
+              {freePdfLimit - (user.pdf_downloads_count ?? 0) === 1 ? "" : "s"}
             </p>
           )}
           {user?.is_premium && (

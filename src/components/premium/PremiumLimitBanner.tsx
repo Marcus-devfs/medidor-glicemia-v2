@@ -4,15 +4,13 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import {
-  formatPremiumPrice,
-  FREE_PDF_LIMIT,
-  PREMIUM_ONE_TIME_NOTE,
-} from "@/lib/premium";
+import { usePremiumSettings } from "@/contexts/PremiumSettingsContext";
+import { PREMIUM_ONE_TIME_NOTE } from "@/lib/premium";
 
 const DISMISS_KEY = "gestaglic_premium_limit_banner_dismissed";
 
 export function PremiumLimitBanner() {
+  const { freePdfLimit, formatPremiumPrice } = usePremiumSettings();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -43,7 +41,7 @@ export function PremiumLimitBanner() {
         <Sparkles className="h-5 w-5 shrink-0 text-amber-600 mt-0.5" />
         <div>
           <p className="text-sm font-semibold text-gray-900">
-            Você usou seus {FREE_PDF_LIMIT} PDFs gratuitos
+            Você usou seus {freePdfLimit} PDFs gratuitos
           </p>
           <p className="text-xs text-gray-600 mt-1 leading-relaxed">
             Para continuar gerando relatórios ilimitados até o nascimento do bebê, desbloqueie com

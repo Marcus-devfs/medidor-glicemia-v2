@@ -16,11 +16,8 @@ import { Input } from "@/components/ui/Input";
 import { api } from "@/lib/api";
 import { cpfDigits, formatCpfInput, isValidCpfInput } from "@/lib/cpf";
 import { useAuth } from "@/contexts/AuthContext";
-import {
-  formatPremiumPrice,
-  FREE_PDF_LIMIT,
-  PREMIUM_ONE_TIME_NOTE,
-} from "@/lib/premium";
+import { usePremiumSettings } from "@/contexts/PremiumSettingsContext";
+import { PREMIUM_ONE_TIME_NOTE } from "@/lib/premium";
 
 interface PdfLimitModalProps {
   open: boolean;
@@ -40,6 +37,7 @@ type Step = "choose" | "pix";
 
 export function PdfLimitModal({ open, onClose }: PdfLimitModalProps) {
   const { user, updateUser, toast } = useAuth();
+  const { freePdfLimit, formatPremiumPrice } = usePremiumSettings();
   const [step, setStep] = useState<Step>("choose");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -217,7 +215,7 @@ export function PdfLimitModal({ open, onClose }: PdfLimitModalProps) {
             </div>
 
             <p className="text-sm text-gray-600 leading-relaxed text-center">
-              Você usou seus <strong>{FREE_PDF_LIMIT} PDFs gratuitos</strong>. Para desbloquear
+              Você usou seus <strong>{freePdfLimit} PDFs gratuitos</strong>. Para desbloquear
               relatórios <strong>ilimitados</strong>, faça um pagamento único de{" "}
               <strong>{formatPremiumPrice()}</strong>.
             </p>
