@@ -26,9 +26,9 @@ export default function PerfilPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [fetusCount, setFetusCount] = useState(1);
-  const [targetJejum, setTargetJejum] = useState(DEFAULT_GLUCOSE_TARGETS.jejum);
-  const [targetPos1h, setTargetPos1h] = useState(DEFAULT_GLUCOSE_TARGETS.pos1h);
-  const [targetPos2h, setTargetPos2h] = useState(DEFAULT_GLUCOSE_TARGETS.pos2h);
+  const [targetJejum, setTargetJejum] = useState<number>(DEFAULT_GLUCOSE_TARGETS.jejum);
+  const [targetPos1h, setTargetPos1h] = useState<number>(DEFAULT_GLUCOSE_TARGETS.pos1h);
+  const [targetPos2h, setTargetPos2h] = useState<number>(DEFAULT_GLUCOSE_TARGETS.pos2h);
   const [weeklyEmail, setWeeklyEmail] = useState(false);
   const { reminders, pushLoading, toggleReminders, updateReminderTime } = useReminders(user?._id);
   const [saving, setSaving] = useState(false);

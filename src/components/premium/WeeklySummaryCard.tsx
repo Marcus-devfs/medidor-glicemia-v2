@@ -6,7 +6,6 @@ import { Card } from "@/components/ui/Card";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import { gestationSummary } from "@/lib/pregnancy";
-import { gestationSummary } from "@/lib/pregnancy";
 
 interface WeeklySummaryData {
   stats: {
