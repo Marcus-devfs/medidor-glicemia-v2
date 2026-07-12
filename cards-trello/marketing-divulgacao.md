@@ -4,7 +4,7 @@ Plano prático para crescer usuárias, conversão premium e marca — sem queima
 
 **Produto:** app PWA para diabetes gestacional · medições · PDF para consulta · dicas · comunidade  
 **URLs:** [app.gestaglic.com.br](https://app.gestaglic.com.br) · LP · `/dicas`  
-**Monetização:** 5 PDFs grátis → premium **pagamento único** (teste R$ 6,95)
+**Monetização:** 5 PDFs grátis → premium **pagamento único R$ 14,90**
 
 ---
 
