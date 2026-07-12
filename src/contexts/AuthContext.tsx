@@ -31,6 +31,12 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 const PUBLIC_ROUTES = ["/login", "/recuperar-senha", "/redefinir-senha"];
 
+function isPublicPath(pathname: string) {
+  if (PUBLIC_ROUTES.includes(pathname)) return true;
+  if (pathname.startsWith("/compartilhar/")) return true;
+  return false;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(() => {
@@ -126,7 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (loading) return;
-    const isPublic = PUBLIC_ROUTES.includes(pathname);
+    const isPublic = isPublicPath(pathname);
     if (!user && !isPublic) {
       router.replace("/login");
     } else if (user && pathname === "/login") {

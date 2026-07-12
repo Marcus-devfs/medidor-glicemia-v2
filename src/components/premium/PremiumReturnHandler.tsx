@@ -24,7 +24,7 @@ export function PremiumReturnHandler() {
         .then(({ data }) => {
           updateUser(data);
           if (data.is_premium) {
-            toast("Pagamento confirmado! PDFs ilimitados liberados 💗", "success");
+            toast("Kit Consulta Premium ativado! 💗", "success");
           } else {
             toast(
               "Pagamento recebido! Se o premium não liberar em 1 min, atualize a página.",

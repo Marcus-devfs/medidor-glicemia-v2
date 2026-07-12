@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/Card";
+import { useGlucoseTargets } from "@/hooks/useGlucoseTargets";
 import { getGlucoseStatus, getStatusColor, getStatusLabel } from "@/lib/glucose";
 import { cn } from "@/lib/utils";
 import type { GlucosePeriod } from "@/types";
@@ -11,7 +12,8 @@ interface SummaryCardProps {
 }
 
 export function SummaryCard({ label, value, period, icon }: SummaryCardProps) {
-  const status = value > 0 ? getGlucoseStatus(value, period) : null;
+  const targets = useGlucoseTargets();
+  const status = value > 0 ? getGlucoseStatus(value, period, targets) : null;
 
   return (
     <Card className="flex flex-col gap-2">

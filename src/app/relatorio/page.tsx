@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { Download, FileText } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Card } from "@/components/ui/Card";
@@ -9,13 +9,19 @@ import { SummaryCard } from "@/components/charts/SummaryCard";
 import { GlucoseChart } from "@/components/charts/GlucoseChartLazy";
 import { PdfLimitModal } from "@/components/premium/PdfLimitModal";
 import { PremiumReturnHandler } from "@/components/premium/PremiumReturnHandler";
+import { PdfTemplatePicker } from "@/components/premium/PdfTemplatePicker";
+import { ShareReportCard } from "@/components/premium/ShareReportCard";
+import { WeeklySummaryCard } from "@/components/premium/WeeklySummaryCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePdfExport } from "@/hooks/usePdfExport";
+import { useGlucoseTargets } from "@/hooks/useGlucoseTargets";
 import { api } from "@/lib/api";
-import { calcAverage, getGlucoseStatus, getStatusColor, getStatusLabel } from "@/lib/glucose";
+import { calcAverage, formatTargetsLine, getGlucoseStatus, getStatusColor, getStatusLabel } from "@/lib/glucose";
 import { usePremiumSettings } from "@/contexts/PremiumSettingsContext";
-import { PREMIUM_ONE_TIME_NOTE } from "@/lib/premium";
-import { TARGET_INFO, cn } from "@/lib/utils";
+import { PREMIUM_KIT_FEATURES, PREMIUM_ONE_TIME_NOTE, type PdfTemplate } from "@/lib/premium";
+import { computeReportStats, filterMarkingsForTemplate } from "@/lib/reportStats";
+import { gestationSummary } from "@/lib/pregnancy";
+import { cn } from "@/lib/utils";
 import { useRegisterPageRefresh } from "@/contexts/RefreshContext";
 import type { Medicao } from "@/types";
 
@@ -26,10 +32,12 @@ const years = [
 ];
 
 export default function RelatorioPage() {
-  const { user } = useAuth();
+  const { user, toast } = useAuth();
+  const targets = useGlucoseTargets();
   const { freePdfLimit, formatPremiumPrice } = usePremiumSettings();
   const { exportPdf, exporting, showLimitModal, setShowLimitModal } = usePdfExport();
   const [year, setYear] = useState("todos");
+  const [pdfTemplate, setPdfTemplate] = useState<PdfTemplate>("completo");
   const [allMarkings, setAllMarkings] = useState<Medicao[]>([]);
   const [medias, setMedias] = useState({ jejum: 0, apos: 0, total: 0 });
   const [loading, setLoading] = useState(true);
@@ -68,20 +76,30 @@ export default function RelatorioPage() {
 
   useRegisterPageRefresh(load);
 
-  const inTarget = allMarkings.filter(
-    (m) => getGlucoseStatus(m.value, m.period) === "normal"
+  const exportMarkings = useMemo(
+    () => filterMarkingsForTemplate(allMarkings, pdfTemplate, year),
+    [allMarkings, pdfTemplate, year]
+  );
+
+  const inTarget = exportMarkings.filter(
+    (m) => getGlucoseStatus(m.value, m.period, targets) === "normal"
   ).length;
-  const pct = allMarkings.length ? Math.round((inTarget / allMarkings.length) * 100) : 0;
+  const pct = exportMarkings.length ? Math.round((inTarget / exportMarkings.length) * 100) : 0;
+
+  const gestationLine = gestationSummary(
+    user?.pregnancy?.dueDate,
+    user?.pregnancy?.fetusCount ?? 1
+  );
 
   const handleExportPdf = () => {
-    exportPdf(allMarkings, {
+    if (!exportMarkings.length) {
+      toast("Nenhuma medição no período selecionado", "error");
+      return;
+    }
+    exportPdf(exportMarkings, {
       year,
-      stats: {
-        jejumAvg: medias.jejum,
-        aposAvg: medias.apos,
-        inTargetPct: pct,
-        total: allMarkings.length,
-      },
+      template: pdfTemplate,
+      stats: computeReportStats(exportMarkings, user),
     });
   };
 
@@ -90,9 +108,17 @@ export default function RelatorioPage() {
       <Suspense fallback={null}>
         <PremiumReturnHandler />
       </Suspense>
-      <Header title="Relatório" subtitle="Acompanhe sua evolução" />
+      <Header title="Relatório" subtitle="Kit consulta · acompanhe sua evolução" />
 
       <main className="flex flex-col gap-5 px-4 pb-4">
+        {gestationLine && (
+          <Card className="bg-brand-50 border-brand-100 py-3">
+            <p className="text-sm font-medium text-brand-800 text-center">{gestationLine}</p>
+          </Card>
+        )}
+
+        <WeeklySummaryCard />
+
         <Card className="bg-gradient-to-br from-brand-600 to-brand-500 text-white border-0">
           <div className="flex items-start gap-3">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/20">
@@ -101,24 +127,41 @@ export default function RelatorioPage() {
             <div className="flex-1 min-w-0">
               <h3 className="font-bold text-base">Relatório para consulta</h3>
               <p className="text-xs text-white/80 mt-1 leading-relaxed">
-                Exporte um PDF profissional com logo GestaGlic, resumo e tabela por data e período
-                — pronto para levar à médica.
+                Modelos profissionais com DPP, semana gestacional e metas personalizadas — prontos
+                para sua obstetra.
               </p>
             </div>
           </div>
+
+          <div className="mt-4 rounded-xl bg-white/10 p-3">
+            <PdfTemplatePicker
+              value={pdfTemplate}
+              onChange={setPdfTemplate}
+              isPremium={!!user?.is_premium}
+              onNeedPremium={() => setShowLimitModal(true)}
+            />
+          </div>
+
           <Button
             onClick={handleExportPdf}
-            disabled={exporting || loading || allMarkings.length === 0}
+            disabled={exporting || loading || exportMarkings.length === 0}
             fullWidth
             className="mt-4 bg-white text-brand-600 hover:bg-brand-50 border-0"
           >
             <Download className="h-4 w-4" />
             {exporting ? "Gerando PDF..." : "Baixar relatório PDF"}
           </Button>
+
+          {exportMarkings.length === 0 && !loading && (
+            <p className="text-[10px] text-white/80 text-center mt-2">
+              Nenhuma medição no período selecionado.
+            </p>
+          )}
+
           {user && !user.is_premium && (user.pdf_downloads_count ?? 0) >= freePdfLimit && (
             <p className="text-[10px] text-white/90 text-center mt-2 leading-relaxed">
-              Limite gratuito atingido · desbloqueie ilimitado com pagamento único de{" "}
-              {formatPremiumPrice()}. {PREMIUM_ONE_TIME_NOTE}
+              Limite gratuito atingido · Kit Consulta Premium {formatPremiumPrice()}.{" "}
+              {PREMIUM_ONE_TIME_NOTE}
             </p>
           )}
           {user && !user.is_premium && (user.pdf_downloads_count ?? 0) < freePdfLimit && (
@@ -131,10 +174,34 @@ export default function RelatorioPage() {
           )}
           {user?.is_premium && (
             <p className="text-[10px] text-white/80 text-center mt-2 font-medium">
-              Premium · PDFs ilimitados
+              Kit Consulta Premium ativo · PDFs ilimitados
             </p>
           )}
         </Card>
+
+        <ShareReportCard onNeedPremium={() => setShowLimitModal(true)} />
+
+        {!user?.is_premium && (
+          <Card className="border-brand-100 bg-brand-50/50">
+            <h3 className="font-semibold text-gray-900 text-sm mb-2">Kit Consulta Premium</h3>
+            <ul className="flex flex-col gap-1.5">
+              {PREMIUM_KIT_FEATURES.map((item) => (
+                <li key={item} className="text-xs text-gray-600 leading-relaxed flex gap-2">
+                  <span className="text-brand-600 shrink-0">✓</span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <Button
+              className="mt-3"
+              fullWidth
+              variant="secondary"
+              onClick={() => setShowLimitModal(true)}
+            >
+              Desbloquear por {formatPremiumPrice()}
+            </Button>
+          </Card>
+        )}
 
         <div className="flex gap-2">
           {years.map((y) => (
@@ -178,7 +245,7 @@ export default function RelatorioPage() {
             <div>
               <p className="text-sm font-semibold text-gray-900">Dentro da meta</p>
               <p className="text-xs text-gray-500 mt-1">
-                {inTarget} de {allMarkings.length} medições dentro dos valores recomendados para gestantes.
+                {inTarget} de {exportMarkings.length} medições no modelo selecionado.
               </p>
             </div>
           </div>
@@ -198,7 +265,7 @@ export default function RelatorioPage() {
           {["Jejum", "Após Café", "Após Almoço", "Após Jantar"].map((period) => {
             const items = allMarkings.filter((m) => m.period === period);
             const avg = calcAverage(items.map((m) => m.value));
-            const status = avg > 0 ? getGlucoseStatus(avg, period as Medicao["period"]) : null;
+            const status = avg > 0 ? getGlucoseStatus(avg, period as Medicao["period"], targets) : null;
             return (
               <div key={period} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
                 <span className="text-sm text-gray-600">{period}</span>
@@ -215,7 +282,9 @@ export default function RelatorioPage() {
           })}
         </Card>
 
-        <p className="text-xs text-center text-gray-400 px-2 leading-relaxed">{TARGET_INFO}</p>
+        <p className="text-xs text-center text-gray-400 px-2 leading-relaxed">
+          {formatTargetsLine(targets)}
+        </p>
       </main>
 
       <PdfLimitModal open={showLimitModal} onClose={() => setShowLimitModal(false)} />

@@ -13,7 +13,7 @@ export function usePdfExport() {
 
   const exportPdf = async (
     markings: Medicao[],
-    options: { year?: string; stats: ReportPdfStats }
+    options: { year?: string; stats: ReportPdfStats; template?: import("@/lib/premium").PdfTemplate }
   ) => {
     if (!user?._id) return;
     if (markings.length === 0) {

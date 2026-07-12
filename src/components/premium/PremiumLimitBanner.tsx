@@ -44,14 +44,14 @@ export function PremiumLimitBanner() {
             Você usou seus {freePdfLimit} PDFs gratuitos
           </p>
           <p className="text-xs text-gray-600 mt-1 leading-relaxed">
-            Para continuar gerando relatórios ilimitados até o nascimento do bebê, desbloqueie com
-            um pagamento único de{" "}
+            Desbloqueie o Kit Consulta Premium — PDFs profissionais, link para médica, resumo
+            semanal e metas personalizadas por{" "}
             <strong className="text-gray-900">{formatPremiumPrice()}</strong>.
           </p>
           <p className="text-[10px] text-amber-800/80 mt-1.5">{PREMIUM_ONE_TIME_NOTE}</p>
           <Link href="/relatorio" className="mt-3 block">
             <Button size="sm" fullWidth>
-              Desbloquear PDFs ilimitados
+              Ver Kit Consulta
             </Button>
           </Link>
         </div>

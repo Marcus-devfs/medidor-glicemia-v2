@@ -1,17 +1,34 @@
 import type { GlucosePeriod } from "@/types";
-import { GLUCOSE_TARGETS } from "./utils";
+import type { GlucoseTargets } from "@/lib/premium";
+import { DEFAULT_GLUCOSE_TARGETS } from "@/lib/premium";
 
 export type GlucoseStatus = "normal" | "warning" | "danger";
 
-export function getGlucoseStatus(value: number, period: GlucosePeriod): GlucoseStatus {
+export function resolveGlucoseTargets(targets?: Partial<GlucoseTargets> | null): GlucoseTargets {
+  return {
+    jejum: targets?.jejum ?? DEFAULT_GLUCOSE_TARGETS.jejum,
+    pos1h: targets?.pos1h ?? DEFAULT_GLUCOSE_TARGETS.pos1h,
+    pos2h: targets?.pos2h ?? DEFAULT_GLUCOSE_TARGETS.pos2h,
+  };
+}
+
+export function getGlucoseStatus(
+  value: number,
+  period: GlucosePeriod,
+  targets: GlucoseTargets = DEFAULT_GLUCOSE_TARGETS
+): GlucoseStatus {
   if (period === "Jejum") {
-    if (value < GLUCOSE_TARGETS.jejum) return "normal";
-    if (value <= GLUCOSE_TARGETS.jejum + 10) return "warning";
+    if (value < targets.jejum) return "normal";
+    if (value <= targets.jejum + 10) return "warning";
     return "danger";
   }
-  if (value < GLUCOSE_TARGETS.pos1h) return "normal";
-  if (value <= GLUCOSE_TARGETS.pos1h + 20) return "warning";
+  if (value < targets.pos1h) return "normal";
+  if (value <= targets.pos1h + 20) return "warning";
   return "danger";
+}
+
+export function formatTargetsLine(targets: GlucoseTargets): string {
+  return `Metas: jejum < ${targets.jejum} mg/dL · 1h pós-refeição < ${targets.pos1h} mg/dL · 2h ≤ ${targets.pos2h} mg/dL`;
 }
 
 export function getStatusColor(status: GlucoseStatus) {

@@ -13,13 +13,15 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Medicao } from "@/types";
-import { GLUCOSE_TARGETS, parseCalendarDate } from "@/lib/utils";
+import { useGlucoseTargets } from "@/hooks/useGlucoseTargets";
+import { parseCalendarDate } from "@/lib/utils";
 
 interface GlucoseChartProps {
   data: Medicao[];
 }
 
 export function GlucoseChart({ data }: GlucoseChartProps) {
+  const targets = useGlucoseTargets();
   const chartData = [...data]
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .slice(-14)
@@ -50,8 +52,8 @@ export function GlucoseChart({ data }: GlucoseChartProps) {
             (props.payload as { period: string }).period,
           ]}
         />
-        <ReferenceLine y={GLUCOSE_TARGETS.jejum} stroke="#22c55e" strokeDasharray="4 4" label={{ value: "Meta jejum", fontSize: 10, fill: "#22c55e" }} />
-        <ReferenceLine y={GLUCOSE_TARGETS.pos1h} stroke="#f59e0b" strokeDasharray="4 4" />
+        <ReferenceLine y={targets.jejum} stroke="#22c55e" strokeDasharray="4 4" label={{ value: "Meta jejum", fontSize: 10, fill: "#22c55e" }} />
+        <ReferenceLine y={targets.pos1h} stroke="#f59e0b" strokeDasharray="4 4" />
         <Line
           type="monotone"
           dataKey="value"

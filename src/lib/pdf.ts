@@ -1,8 +1,17 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { APP_ICON } from "@/lib/brand";
-import { formatDateBR, GLUCOSE_PERIODS, TARGET_INFO } from "@/lib/utils";
-import { calcAverage, getGlucoseStatus, getStatusLabel } from "@/lib/glucose";
+import { formatDateBR, GLUCOSE_PERIODS } from "@/lib/utils";
+import {
+  calcAverage,
+  formatTargetsLine,
+  getGlucoseStatus,
+  getStatusLabel,
+  resolveGlucoseTargets,
+} from "@/lib/glucose";
+import { formatDueDate, fetusCountLabel, getGestationalWeek } from "@/lib/pregnancy";
+import type { PdfTemplate } from "@/lib/premium";
+import { getTemplateLabel } from "@/lib/reportStats";
 import type { GlucosePeriod, Medicao, User } from "@/types";
 
 const PERIOD_ORDER = GLUCOSE_PERIODS.map((p) => p.value);
@@ -19,6 +28,7 @@ export interface ReportPdfStats {
 export interface ReportPdfOptions {
   year?: string;
   stats: ReportPdfStats;
+  template?: PdfTemplate;
 }
 
 function formatGestationId(userId: string) {
@@ -67,8 +77,24 @@ function statusColor(status: ReturnType<typeof getGlucoseStatus>) {
   }
 }
 
-function drawHeader(doc: jsPDF, user: User, logo: string | null, year?: string) {
+function drawHeader(
+  doc: jsPDF,
+  user: User,
+  logo: string | null,
+  options: ReportPdfOptions
+) {
   const gestationId = formatGestationId(user._id);
+  const template = options.template ?? "completo";
+  const periodLabel =
+    template !== "completo"
+      ? getTemplateLabel(template)
+      : options.year && options.year !== "todos"
+        ? `Ano ${options.year}`
+        : "Histórico completo";
+
+  const week = getGestationalWeek(user.pregnancy?.dueDate);
+  const fetusCount = user.pregnancy?.fetusCount ?? 1;
+  const hasPregnancyInfo = week != null || user.pregnancy?.dueDate;
 
   doc.setFillColor(BRAND.r, BRAND.g, BRAND.b);
   doc.roundedRect(14, 12, 182, 32, 3, 3, "F");
@@ -88,15 +114,14 @@ function drawHeader(doc: jsPDF, user: User, logo: string | null, year?: string) 
 
   doc.setFontSize(8);
   doc.text(`Gerado em ${formatDateBR(new Date())}`, 148, 22);
-  if (year && year !== "todos") {
-    doc.text(`Período: ${year}`, 148, 28);
-  }
+  doc.text(periodLabel, 148, 28, { maxWidth: 50 });
   doc.text(`ID: ${gestationId}`, 148, 34);
 
+  const infoHeight = hasPregnancyInfo ? 26 : 18;
   doc.setFillColor(255, 255, 255);
-  doc.roundedRect(14, 48, 182, 18, 2, 2, "F");
+  doc.roundedRect(14, 48, 182, infoHeight, 2, 2, "F");
   doc.setDrawColor(240, 240, 240);
-  doc.roundedRect(14, 48, 182, 18, 2, 2, "S");
+  doc.roundedRect(14, 48, 182, infoHeight, 2, 2, "S");
 
   doc.setTextColor(60, 60, 60);
   doc.setFontSize(10);
@@ -110,12 +135,23 @@ function drawHeader(doc: jsPDF, user: User, logo: string | null, year?: string) 
   doc.setFont("helvetica", "normal");
   doc.text(user.email, 34, 62);
 
+  if (hasPregnancyInfo) {
+    doc.setFont("helvetica", "bold");
+    doc.text("Gestação:", 18, 68);
+    doc.setFont("helvetica", "normal");
+    const parts: string[] = [];
+    if (week != null) parts.push(`${week}ª semana`);
+    if (user.pregnancy?.dueDate) parts.push(`DPP ${formatDueDate(user.pregnancy.dueDate)}`);
+    if (fetusCount > 1) parts.push(fetusCountLabel(fetusCount));
+    doc.text(parts.join(" · "), 38, 68);
+  }
+
   doc.setFont("helvetica", "bold");
   doc.text("ID Gestação:", 110, 56);
   doc.setFont("helvetica", "normal");
   doc.text(gestationId, 136, 56);
 
-  return gestationId;
+  return { gestationId, summaryStartY: 48 + infoHeight + 6 };
 }
 
 function drawSummaryCards(doc: jsPDF, stats: ReportPdfStats, startY: number) {
@@ -149,11 +185,12 @@ export async function generateReportPdf(
   markings: Medicao[],
   options: ReportPdfOptions
 ) {
+  const targets = resolveGlucoseTargets(user.glucoseTargets);
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const logo = await loadLogoBase64();
-  const gestationId = drawHeader(doc, user, logo, options.year);
+  const { gestationId, summaryStartY } = drawHeader(doc, user, logo, options);
 
-  let y = drawSummaryCards(doc, options.stats, 72);
+  let y = drawSummaryCards(doc, options.stats, summaryStartY);
 
   doc.setTextColor(40, 40, 40);
   doc.setFontSize(11);
@@ -177,7 +214,11 @@ export async function generateReportPdf(
     PERIOD_ORDER.forEach((period, colIdx) => {
       const m = periods.get(period);
       if (m) {
-        cellMeta.push({ row: rowIdx, col: colIdx + 1, status: getGlucoseStatus(m.value, period) });
+        cellMeta.push({
+          row: rowIdx,
+          col: colIdx + 1,
+          status: getGlucoseStatus(m.value, period, targets),
+        });
       }
     });
   });
@@ -228,7 +269,7 @@ export async function generateReportPdf(
   const periodRows = PERIOD_ORDER.map((period) => {
     const items = markings.filter((m) => m.period === period);
     const avg = calcAverage(items.map((m) => m.value));
-    const status = avg > 0 ? getGlucoseStatus(avg, period as GlucosePeriod) : null;
+    const status = avg > 0 ? getGlucoseStatus(avg, period as GlucosePeriod, targets) : null;
     return [
       period,
       items.length > 0 ? String(items.length) : "0",
@@ -262,7 +303,7 @@ export async function generateReportPdf(
   doc.setFontSize(7);
   doc.setTextColor(120, 120, 120);
   doc.setFont("helvetica", "normal");
-  doc.text(TARGET_INFO, 14, finalY + 12, { maxWidth: 182 });
+  doc.text(formatTargetsLine(targets), 14, finalY + 12, { maxWidth: 182 });
   doc.text(
     "Documento gerado pelo GestaGlic · gestaglic.com.br · Uso exclusivo para acompanhamento médico.",
     14,
@@ -270,7 +311,10 @@ export async function generateReportPdf(
     { maxWidth: 182 }
   );
 
-  doc.save(`gestaglic-relatorio-${gestationId}-${formatDateBR(new Date()).replace(/\//g, "-")}.pdf`);
+  const suffix = options.template && options.template !== "completo" ? `-${options.template}` : "";
+  doc.save(
+    `gestaglic-relatorio-${gestationId}${suffix}-${formatDateBR(new Date()).replace(/\//g, "-")}.pdf`
+  );
 }
 
 /** @deprecated Use generateReportPdf */

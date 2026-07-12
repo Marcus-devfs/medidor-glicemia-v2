@@ -1,5 +1,21 @@
 export type GlucosePeriod = "Jejum" | "Após Café" | "Após Almoço" | "Após Jantar";
 
+export interface PregnancyProfile {
+  dueDate?: string | null;
+  fetusCount?: number;
+}
+
+export interface GlucoseTargets {
+  jejum: number;
+  pos1h: number;
+  pos2h: number;
+}
+
+export interface UserPreferences {
+  notificationsEnabled?: boolean;
+  weeklySummaryEmail?: boolean;
+}
+
 export interface User {
   _id: string;
   name: string;
@@ -11,6 +27,9 @@ export interface User {
   token?: string;
   pdf_downloads_count?: number;
   is_premium?: boolean;
+  pregnancy?: PregnancyProfile;
+  glucoseTargets?: GlucoseTargets;
+  preferences?: UserPreferences;
 }
 
 export interface Medicao {

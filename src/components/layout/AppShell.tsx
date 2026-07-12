@@ -11,10 +11,16 @@ import { OnboardingProvider } from "@/components/onboarding/OnboardingProvider";
 
 const PUBLIC_PATHS = ["/login", "/recuperar-senha", "/redefinir-senha"];
 
+function isPublicPath(pathname: string) {
+  if (PUBLIC_PATHS.includes(pathname)) return true;
+  if (pathname.startsWith("/compartilhar/")) return true;
+  return false;
+}
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { loading, user } = useAuth();
   const pathname = usePathname();
-  const isPublic = PUBLIC_PATHS.includes(pathname);
+  const isPublic = isPublicPath(pathname);
 
   if (loading || (!user && !isPublic)) {
     return (

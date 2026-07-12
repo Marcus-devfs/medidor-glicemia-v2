@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Bell, LogOut, User as UserIcon } from "lucide-react";
+import { Baby, Bell, Crown, LogOut, User as UserIcon } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { PremiumBadge } from "@/components/premium/PremiumBadge";
 import { Card } from "@/components/ui/Card";
@@ -13,33 +13,85 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRegisterPageRefresh } from "@/contexts/RefreshContext";
 import { api } from "@/lib/api";
 import { useReminders } from "@/hooks/useReminders";
+import { gestationSummary } from "@/lib/pregnancy";
+import { PREMIUM_KIT_FEATURES } from "@/lib/premium";
+import { DEFAULT_GLUCOSE_TARGETS } from "@/lib/premium";
+import { toDateInputValue } from "@/lib/utils";
+import type { User } from "@/types";
 
 export default function PerfilPage() {
   const { user, logout, toast, updateUser, refreshUser } = useAuth();
   const [name, setName] = useState(user?.name ?? "");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [fetusCount, setFetusCount] = useState(1);
+  const [targetJejum, setTargetJejum] = useState(DEFAULT_GLUCOSE_TARGETS.jejum);
+  const [targetPos1h, setTargetPos1h] = useState(DEFAULT_GLUCOSE_TARGETS.pos1h);
+  const [targetPos2h, setTargetPos2h] = useState(DEFAULT_GLUCOSE_TARGETS.pos2h);
+  const [weeklyEmail, setWeeklyEmail] = useState(false);
   const { reminders, pushLoading, toggleReminders, updateReminderTime } = useReminders(user?._id);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    setName(user?.name ?? "");
+    if (!user) return;
+    setName(user.name ?? "");
+    setDueDate(user.pregnancy?.dueDate ? toDateInputValue(user.pregnancy.dueDate) : "");
+    setFetusCount(user.pregnancy?.fetusCount ?? 1);
+    setTargetJejum(user.glucoseTargets?.jejum ?? DEFAULT_GLUCOSE_TARGETS.jejum);
+    setTargetPos1h(user.glucoseTargets?.pos1h ?? DEFAULT_GLUCOSE_TARGETS.pos1h);
+    setTargetPos2h(user.glucoseTargets?.pos2h ?? DEFAULT_GLUCOSE_TARGETS.pos2h);
+    setWeeklyEmail(!!user.preferences?.weeklySummaryEmail);
   }, [user]);
 
   useRegisterPageRefresh(refreshUser);
 
-  const handleSaveProfile = async () => {
+  const saveProfile = async (payload: Partial<User>) => {
     if (!user?._id) return;
     setSaving(true);
     try {
-      const { data } = await api.patch(`/user/update/${user._id}`, { name });
+      const { data } = await api.patch<User>(`/user/update/${user._id}`, payload);
       updateUser({ ...user, ...data });
-      toast("Perfil atualizado!", "success");
+      toast("Salvo!", "success");
     } catch {
-      toast("Erro ao atualizar perfil", "error");
+      toast("Erro ao salvar", "error");
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleSaveName = () => saveProfile({ name });
+
+  const handleSavePregnancy = () =>
+    saveProfile({
+      pregnancy: {
+        dueDate: dueDate || null,
+        fetusCount,
+      },
+    });
+
+  const handleSaveTargets = () => {
+    if (!user?.is_premium) {
+      toast("Metas personalizadas são do Kit Consulta Premium", "info");
+      return;
+    }
+    saveProfile({
+      glucoseTargets: {
+        jejum: targetJejum,
+        pos1h: targetPos1h,
+        pos2h: targetPos2h,
+      },
+    });
+  };
+
+  const handleToggleWeeklyEmail = async () => {
+    if (!user?.is_premium) {
+      toast("Resumo semanal por e-mail é do Kit Consulta Premium", "info");
+      return;
+    }
+    const next = !weeklyEmail;
+    setWeeklyEmail(next);
+    await saveProfile({ preferences: { weeklySummaryEmail: next } });
   };
 
   const handleChangePassword = async () => {
@@ -72,6 +124,8 @@ export default function PerfilPage() {
     );
   };
 
+  const gestationLine = gestationSummary(dueDate || user?.pregnancy?.dueDate, fetusCount);
+
   return (
     <div className="mx-auto max-w-lg">
       <Header title="Perfil" subtitle={user?.email} />
@@ -87,11 +141,53 @@ export default function PerfilPage() {
               {user?.is_premium && <PremiumBadge />}
             </div>
             <p className="text-sm text-gray-500">{user?.email}</p>
-            {user?.is_premium && (
+            {user?.is_premium ? (
               <p className="text-xs text-amber-800/80 mt-1.5 leading-relaxed">
-                Relatórios PDF ilimitados · pagamento único ativo
+                Kit Consulta Premium ativo · pagamento único
               </p>
+            ) : (
+              <Link
+                href="/relatorio"
+                className="text-xs text-brand-600 font-semibold mt-1.5 inline-block"
+              >
+                Conhecer o Kit Consulta →
+              </Link>
             )}
+          </div>
+        </Card>
+
+        <Card>
+          <div className="flex items-center gap-2 mb-4">
+            <Baby className="h-5 w-5 text-brand-600" />
+            <h3 className="font-semibold text-gray-900">Dados da gestação</h3>
+          </div>
+          <div className="flex flex-col gap-3">
+            <Input
+              label="Data prevista do parto (DPP)"
+              type="date"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Quantidade de fetos
+              </label>
+              <select
+                value={fetusCount}
+                onChange={(e) => setFetusCount(Number(e.target.value))}
+                className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-brand-400 focus:outline-none"
+              >
+                <option value={1}>1 — gestação única</option>
+                <option value={2}>2 — gemelar</option>
+                <option value={3}>3 ou mais</option>
+              </select>
+            </div>
+            {gestationLine && (
+              <p className="text-xs text-brand-700 bg-brand-50 rounded-lg px-3 py-2">{gestationLine}</p>
+            )}
+            <Button onClick={handleSavePregnancy} disabled={saving} fullWidth>
+              Salvar gestação
+            </Button>
           </div>
         </Card>
 
@@ -99,11 +195,75 @@ export default function PerfilPage() {
           <h3 className="font-semibold text-gray-900 mb-4">Dados pessoais</h3>
           <div className="flex flex-col gap-3">
             <Input label="Nome" value={name} onChange={(e) => setName(e.target.value)} />
-            <Button onClick={handleSaveProfile} disabled={saving} fullWidth>
+            <Button onClick={handleSaveName} disabled={saving} fullWidth>
               Salvar nome
             </Button>
           </div>
         </Card>
+
+        <Card>
+          <div className="flex items-center gap-2 mb-1">
+            <Crown className="h-5 w-5 text-amber-600" />
+            <h3 className="font-semibold text-gray-900">Metas de glicemia</h3>
+          </div>
+          <p className="text-xs text-gray-500 mb-4 leading-relaxed">
+            {user?.is_premium
+              ? "Ajuste conforme orientação da sua equipe de saúde."
+              : "Personalização disponível no Kit Consulta Premium."}
+          </p>
+          <div className="grid grid-cols-3 gap-2 mb-3">
+            <Input
+              label="Jejum"
+              type="number"
+              value={String(targetJejum)}
+              onChange={(e) => setTargetJejum(Number(e.target.value))}
+              disabled={!user?.is_premium}
+            />
+            <Input
+              label="1h pós"
+              type="number"
+              value={String(targetPos1h)}
+              onChange={(e) => setTargetPos1h(Number(e.target.value))}
+              disabled={!user?.is_premium}
+            />
+            <Input
+              label="2h pós"
+              type="number"
+              value={String(targetPos2h)}
+              onChange={(e) => setTargetPos2h(Number(e.target.value))}
+              disabled={!user?.is_premium}
+            />
+          </div>
+          <Button
+            onClick={handleSaveTargets}
+            disabled={saving || !user?.is_premium}
+            variant="secondary"
+            fullWidth
+          >
+            Salvar metas
+          </Button>
+        </Card>
+
+        {user?.is_premium && (
+          <Card>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="font-semibold text-gray-900 text-sm">Resumo semanal por e-mail</p>
+                <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
+                  Receba todo domingo (via cron) o resumo dos últimos 7 dias.
+                </p>
+              </div>
+              <Toggle checked={weeklyEmail} onChange={handleToggleWeeklyEmail} label="E-mail semanal" />
+            </div>
+            <ul className="mt-4 flex flex-col gap-1">
+              {PREMIUM_KIT_FEATURES.slice(0, 3).map((f) => (
+                <li key={f} className="text-xs text-gray-500 flex gap-1.5">
+                  <span className="text-green-600">✓</span> {f}
+                </li>
+              ))}
+            </ul>
+          </Card>
+        )}
 
         <Card>
           <h3 className="font-semibold text-gray-900 mb-4">Alterar senha</h3>
@@ -166,9 +326,6 @@ export default function PerfilPage() {
                   />
                 </div>
               ))}
-              <p className="text-xs text-gray-400 leading-relaxed">
-                Instale o app na tela inicial e mantenha as notificações ativas. Os lembretes chegam mesmo com o app fechado.
-              </p>
             </div>
           )}
         </Card>

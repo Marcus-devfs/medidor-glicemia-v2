@@ -17,7 +17,7 @@ import { api } from "@/lib/api";
 import { cpfDigits, formatCpfInput, isValidCpfInput } from "@/lib/cpf";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePremiumSettings } from "@/contexts/PremiumSettingsContext";
-import { PREMIUM_ONE_TIME_NOTE } from "@/lib/premium";
+import { PREMIUM_KIT_FEATURES, PREMIUM_ONE_TIME_NOTE } from "@/lib/premium";
 
 interface PdfLimitModalProps {
   open: boolean;
@@ -76,7 +76,7 @@ export function PdfLimitModal({ open, onClose }: PdfLimitModalProps) {
         pdf_downloads_count?: number;
       }>(`/user/${user._id}`);
       updateUser({ ...user, is_premium: true, pdf_downloads_count: data.pdf_downloads_count });
-      toast("Pagamento confirmado! PDFs ilimitados liberados 💗", "success");
+      toast("Kit Consulta Premium ativado! 💗", "success");
       onClose();
     } catch {
       updateUser({ ...user, is_premium: true });
@@ -203,7 +203,7 @@ export function PdfLimitModal({ open, onClose }: PdfLimitModalProps) {
     <Modal
       open={open}
       onClose={onClose}
-      title={step === "pix" ? "Pagamento Pix" : "Limite de PDFs atingido"}
+      title={step === "pix" ? "Pagamento Pix" : "Kit Consulta Premium"}
     >
       <div className="flex flex-col gap-4">
         {step === "choose" && (
@@ -215,10 +215,19 @@ export function PdfLimitModal({ open, onClose }: PdfLimitModalProps) {
             </div>
 
             <p className="text-sm text-gray-600 leading-relaxed text-center">
-              Você usou seus <strong>{freePdfLimit} PDFs gratuitos</strong>. Para desbloquear
-              relatórios <strong>ilimitados</strong>, faça um pagamento único de{" "}
-              <strong>{formatPremiumPrice()}</strong>.
+              Você usou seus <strong>{freePdfLimit} PDFs gratuitos</strong>. Desbloqueie o{" "}
+              <strong>Kit Consulta Premium</strong> por{" "}
+              <strong>{formatPremiumPrice()}</strong> (pagamento único):
             </p>
+
+            <ul className="text-left text-xs text-gray-600 space-y-1.5 bg-brand-50 rounded-xl px-4 py-3">
+              {PREMIUM_KIT_FEATURES.map((item) => (
+                <li key={item} className="flex gap-2">
+                  <span className="text-brand-600 shrink-0">✓</span>
+                  {item}
+                </li>
+              ))}
+            </ul>
 
             <p className="text-[11px] text-brand-700 text-center leading-relaxed bg-brand-50 rounded-lg px-3 py-2">
               {PREMIUM_ONE_TIME_NOTE}
