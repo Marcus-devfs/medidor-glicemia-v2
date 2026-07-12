@@ -5,17 +5,19 @@ import { BookOpen, ChevronRight } from "lucide-react";
 import { api } from "@/lib/api";
 import { LP_URL } from "@/lib/brand";
 import { Card } from "@/components/ui/Card";
+import { useRefreshSignal } from "@/contexts/RefreshContext";
 import type { ArticlePreview } from "@/types";
 
 export function TipsFeed() {
   const [articles, setArticles] = useState<ArticlePreview[]>([]);
+  const refreshKey = useRefreshSignal();
 
   useEffect(() => {
     api
       .get<ArticlePreview[]>("/articles?limit=6")
       .then(({ data }) => setArticles(data))
       .catch(() => {});
-  }, []);
+  }, [refreshKey]);
 
   if (articles.length === 0) return null;
 

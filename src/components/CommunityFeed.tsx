@@ -6,17 +6,19 @@ import { ChevronRight, Heart, MessageCircle, Users } from "lucide-react";
 import { api } from "@/lib/api";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { useRefreshSignal } from "@/contexts/RefreshContext";
 import type { ForumPost } from "@/types";
 
 export function CommunityFeed() {
   const [posts, setPosts] = useState<ForumPost[]>([]);
+  const refreshKey = useRefreshSignal();
 
   useEffect(() => {
     api
       .get<ForumPost[]>("/forum/posts")
       .then(({ data }) => setPosts(data.slice(0, 3)))
       .catch(() => {});
-  }, []);
+  }, [refreshKey]);
 
   return (
     <Card>

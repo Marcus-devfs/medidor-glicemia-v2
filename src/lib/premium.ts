@@ -1,5 +1,5 @@
 export const FREE_PDF_LIMIT = 5;
-export const PREMIUM_PRICE = 6.95;
+export const PREMIUM_PRICE = 14.9;
 
 export function formatPremiumPrice(): string {
   return PREMIUM_PRICE.toLocaleString("pt-BR", {

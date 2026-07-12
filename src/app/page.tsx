@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Baby, ChevronRight } from "lucide-react";
 import { Header } from "@/components/layout/Header";
@@ -14,6 +14,7 @@ import { CommunityFeed } from "@/components/CommunityFeed";
 import { ReportPromoBanner } from "@/components/premium/ReportPromoBanner";
 import { PremiumLimitBanner } from "@/components/premium/PremiumLimitBanner";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRegisterPageRefresh } from "@/contexts/RefreshContext";
 import { api } from "@/lib/api";
 import { calcAverage } from "@/lib/glucose";
 import { FREE_PDF_LIMIT } from "@/lib/premium";
@@ -26,32 +27,36 @@ export default function HomePage() {
   const [recent, setRecent] = useState<Medicao[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function load() {
-      if (!user?._id) return;
-      try {
-        const [mediaRes, listRes] = await Promise.all([
-          api.get(`/marking/list/media/${user._id}?year=todos`),
-          api.get<Medicao[]>(`/marking/list/${user._id}`),
-        ]);
-        const { jejum, aposLanch } = mediaRes.data;
-        setMedias({
-          jejum: calcAverage(jejum.map((m: Medicao) => m.value)),
-          apos: calcAverage(aposLanch.map((m: Medicao) => m.value)),
-        });
-        setRecent(
-          [...listRes.data]
-            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-            .slice(0, 5)
-        );
-      } catch {
-        // silently fail on home
-      } finally {
-        setLoading(false);
-      }
+  const load = useCallback(async () => {
+    if (!user?._id) return;
+    setLoading(true);
+    try {
+      const [mediaRes, listRes] = await Promise.all([
+        api.get(`/marking/list/media/${user._id}?year=todos`),
+        api.get<Medicao[]>(`/marking/list/${user._id}`),
+      ]);
+      const { jejum, aposLanch } = mediaRes.data;
+      setMedias({
+        jejum: calcAverage(jejum.map((m: Medicao) => m.value)),
+        apos: calcAverage(aposLanch.map((m: Medicao) => m.value)),
+      });
+      setRecent(
+        [...listRes.data]
+          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+          .slice(0, 5)
+      );
+    } catch {
+      // silently fail on home
+    } finally {
+      setLoading(false);
     }
-    load();
   }, [user?._id]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  useRegisterPageRefresh(load);
 
   const pdfCount = user?.pdf_downloads_count ?? 0;
   const atPdfLimit = Boolean(user && !user.is_premium && pdfCount >= FREE_PDF_LIMIT);

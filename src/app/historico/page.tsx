@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Search, Trash2, Pencil } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Card } from "@/components/ui/Card";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { MeasureForm } from "@/components/measure/MeasureForm";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRegisterPageRefresh } from "@/contexts/RefreshContext";
 import { api } from "@/lib/api";
 import { formatDateBR, removeAccents } from "@/lib/utils";
 import { getGlucoseStatus, getStatusColor, getStatusLabel } from "@/lib/glucose";
@@ -22,7 +23,7 @@ export default function HistoricoPage() {
   const [editItem, setEditItem] = useState<Medicao | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     if (!user?._id) return;
     setLoading(true);
     try {
@@ -35,11 +36,13 @@ export default function HistoricoPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?._id, toast]);
 
   useEffect(() => {
     load();
-  }, [user?._id]);
+  }, [load]);
+
+  useRegisterPageRefresh(load);
 
   const filtered = markings.filter((m) => {
     if (!search) return true;

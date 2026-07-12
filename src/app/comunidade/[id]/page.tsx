@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Flag, Heart } from "lucide-react";
@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Textarea";
 import { api } from "@/lib/api";
+import { useRegisterPageRefresh } from "@/contexts/RefreshContext";
 import { cn, formatDateBR } from "@/lib/utils";
 import type { ForumComment, ForumPost } from "@/types";
 
@@ -21,20 +22,26 @@ export default function PostDetailPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  const load = () => {
-    api
-      .get<{ post: ForumPost; comments: ForumComment[] }>(`/forum/posts/${id}`)
-      .then(({ data }) => {
-        setPost(data.post);
-        setComments(data.comments);
-      })
-      .catch(() => router.push("/comunidade"))
-      .finally(() => setLoading(false));
-  };
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data } = await api.get<{ post: ForumPost; comments: ForumComment[] }>(
+        `/forum/posts/${id}`
+      );
+      setPost(data.post);
+      setComments(data.comments);
+    } catch {
+      router.push("/comunidade");
+    } finally {
+      setLoading(false);
+    }
+  }, [id, router]);
 
   useEffect(() => {
     load();
-  }, [id]);
+  }, [load]);
+
+  useRegisterPageRefresh(load);
 
   const toggleSupport = async () => {
     if (!post) return;

@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { Download, FileText } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Card } from "@/components/ui/Card";
@@ -15,6 +15,7 @@ import { api } from "@/lib/api";
 import { calcAverage, getGlucoseStatus, getStatusColor, getStatusLabel } from "@/lib/glucose";
 import { formatPremiumPrice, FREE_PDF_LIMIT, PREMIUM_ONE_TIME_NOTE } from "@/lib/premium";
 import { TARGET_INFO, cn } from "@/lib/utils";
+import { useRegisterPageRefresh } from "@/contexts/RefreshContext";
 import type { Medicao } from "@/types";
 
 const years = [
@@ -31,36 +32,39 @@ export default function RelatorioPage() {
   const [medias, setMedias] = useState({ jejum: 0, apos: 0, total: 0 });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function load() {
-      if (!user?._id) return;
-      setLoading(true);
-      try {
-        const [mediaRes, listRes] = await Promise.all([
-          api.get(`/marking/list/media/${user._id}?year=${year}`),
-          api.get<Medicao[]>(`/marking/list/${user._id}`),
-        ]);
-        const { jejum, aposLanch } = mediaRes.data;
-        const jejumAvg = calcAverage(jejum.map((m: Medicao) => m.value));
-        const aposAvg = calcAverage(aposLanch.map((m: Medicao) => m.value));
+  const load = useCallback(async () => {
+    if (!user?._id) return;
+    setLoading(true);
+    try {
+      const [mediaRes, listRes] = await Promise.all([
+        api.get(`/marking/list/media/${user._id}?year=${year}`),
+        api.get<Medicao[]>(`/marking/list/${user._id}`),
+      ]);
+      const { jejum, aposLanch } = mediaRes.data;
+      const jejumAvg = calcAverage(jejum.map((m: Medicao) => m.value));
+      const aposAvg = calcAverage(aposLanch.map((m: Medicao) => m.value));
 
-        let filtered = listRes.data;
-        if (year !== "todos") {
-          filtered = listRes.data.filter((m) =>
-            new Date(m.date).getFullYear().toString() === year
-          );
-        }
-
-        setMedias({ jejum: jejumAvg, apos: aposAvg, total: filtered.length });
-        setAllMarkings(filtered);
-      } catch {
-        // fail silently
-      } finally {
-        setLoading(false);
+      let filtered = listRes.data;
+      if (year !== "todos") {
+        filtered = listRes.data.filter((m) =>
+          new Date(m.date).getFullYear().toString() === year
+        );
       }
+
+      setMedias({ jejum: jejumAvg, apos: aposAvg, total: filtered.length });
+      setAllMarkings(filtered);
+    } catch {
+      // fail silently
+    } finally {
+      setLoading(false);
     }
-    load();
   }, [user?._id, year]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  useRegisterPageRefresh(load);
 
   const inTarget = allMarkings.filter(
     (m) => getGlucoseStatus(m.value, m.period) === "normal"

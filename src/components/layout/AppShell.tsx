@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { BottomNav } from "./BottomNav";
 import { Toast } from "@/components/ui/Toast";
+import { RefreshProvider } from "@/contexts/RefreshContext";
 import { PwaInstallProvider } from "@/components/pwa/PwaInstallProvider";
 
 const PUBLIC_PATHS = ["/login", "/recuperar-senha", "/redefinir-senha"];
@@ -27,7 +28,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <>
       <PwaInstallProvider />
-      <div className={isPublic ? "min-h-screen" : "min-h-screen pb-24"}>{children}</div>
+      <RefreshProvider enabled={!isPublic}>
+        <div className={isPublic ? "min-h-screen" : "min-h-screen pb-24"}>{children}</div>
+      </RefreshProvider>
       {!isPublic && <BottomNav />}
       <Toast />
     </>

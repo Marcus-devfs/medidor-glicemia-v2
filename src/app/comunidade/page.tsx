@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Heart, MessageCircle, Plus, Shield } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { useRegisterPageRefresh } from "@/contexts/RefreshContext";
 import { api } from "@/lib/api";
 import { cn, formatDateBR } from "@/lib/utils";
 import type { ForumCategory, ForumPost } from "@/types";
@@ -23,13 +24,22 @@ export default function ComunidadePage() {
   const [category, setCategory] = useState<string>("Todas");
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const load = useCallback(async () => {
+    setLoading(true);
     const params = category !== "Todas" ? `?category=${encodeURIComponent(category)}` : "";
-    api
-      .get<ForumPost[]>(`/forum/posts${params}`)
-      .then(({ data }) => setPosts(data))
-      .finally(() => setLoading(false));
+    try {
+      const { data } = await api.get<ForumPost[]>(`/forum/posts${params}`);
+      setPosts(data);
+    } finally {
+      setLoading(false);
+    }
   }, [category]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  useRegisterPageRefresh(load);
 
   return (
     <div className="mx-auto max-w-lg">
@@ -50,7 +60,6 @@ export default function ComunidadePage() {
             <button
               key={c}
               onClick={() => {
-                setLoading(true);
                 setCategory(c);
               }}
               className={cn(

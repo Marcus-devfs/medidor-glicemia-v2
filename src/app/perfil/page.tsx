@@ -9,11 +9,12 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Toggle } from "@/components/ui/Toggle";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRegisterPageRefresh } from "@/contexts/RefreshContext";
 import { api } from "@/lib/api";
 import { useReminders } from "@/hooks/useReminders";
 
 export default function PerfilPage() {
-  const { user, logout, toast, updateUser } = useAuth();
+  const { user, logout, toast, updateUser, refreshUser } = useAuth();
   const [name, setName] = useState(user?.name ?? "");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -23,6 +24,8 @@ export default function PerfilPage() {
   useEffect(() => {
     setName(user?.name ?? "");
   }, [user]);
+
+  useRegisterPageRefresh(refreshUser);
 
   const handleSaveProfile = async () => {
     if (!user?._id) return;

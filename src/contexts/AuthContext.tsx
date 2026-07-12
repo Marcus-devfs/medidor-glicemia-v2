@@ -21,6 +21,7 @@ interface AuthContextValue {
   register: (data: RegisterData) => Promise<boolean>;
   logout: () => void;
   updateUser: (user: User) => void;
+  refreshUser: () => Promise<void>;
   toast: (message: string, type?: "success" | "error" | "info") => void;
   toastMessage: { message: string; type: "success" | "error" | "info" } | null;
   clearToast: () => void;
@@ -89,6 +90,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(updated);
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+      setAuthToken(token);
+      const { data } = await api.post<User>("/user/loginToken");
+      setUser(data);
+    } catch {
+      // sessão inválida — AuthProvider trata no próximo load
+    }
+  }, []);
+
   useEffect(() => {
     async function restoreSession() {
       const token = localStorage.getItem("token");
@@ -130,11 +143,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       register,
       logout,
       updateUser,
+      refreshUser,
       toast,
       toastMessage,
       clearToast,
     }),
-    [user, loading, login, register, logout, updateUser, toast, toastMessage, clearToast]
+    [user, loading, login, register, logout, updateUser, refreshUser, toast, toastMessage, clearToast]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
