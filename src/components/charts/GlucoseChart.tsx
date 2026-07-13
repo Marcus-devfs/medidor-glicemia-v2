@@ -10,26 +10,25 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from "recharts";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import type { Medicao } from "@/types";
+import type { GlucoseTargets } from "@/lib/premium";
 import { useGlucoseTargets } from "@/hooks/useGlucoseTargets";
-import { parseCalendarDate } from "@/lib/utils";
+import { formatChartDateLabel, sortMarkingsByDate } from "@/lib/utils";
 
 interface GlucoseChartProps {
   data: Medicao[];
+  targets?: GlucoseTargets;
 }
 
-export function GlucoseChart({ data }: GlucoseChartProps) {
-  const targets = useGlucoseTargets();
-  const chartData = [...data]
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    .slice(-14)
-    .map((m) => ({
-      date: format(parseCalendarDate(m.date), "dd/MM", { locale: ptBR }),
-      value: m.value,
-      period: m.period,
-    }));
+export function GlucoseChart({ data, targets: targetsProp }: GlucoseChartProps) {
+  const hookTargets = useGlucoseTargets();
+  const targets = targetsProp ?? hookTargets;
+  const sorted = sortMarkingsByDate(data);
+  const chartData = sorted.map((m) => ({
+    date: formatChartDateLabel(m, sorted),
+    value: m.value,
+    period: m.period,
+  }));
 
   if (!chartData.length) {
     return (
@@ -43,7 +42,15 @@ export function GlucoseChart({ data }: GlucoseChartProps) {
     <ResponsiveContainer width="100%" height={220}>
       <LineChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#fce7f3" />
-        <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#9ca3af" />
+        <XAxis
+          dataKey="date"
+          tick={{ fontSize: 10 }}
+          stroke="#9ca3af"
+          interval="preserveStartEnd"
+          angle={-25}
+          textAnchor="end"
+          height={50}
+        />
         <YAxis tick={{ fontSize: 11 }} stroke="#9ca3af" domain={[60, 220]} />
         <Tooltip
           contentStyle={{ borderRadius: 12, border: "1px solid #fbcfe8", fontSize: 13 }}

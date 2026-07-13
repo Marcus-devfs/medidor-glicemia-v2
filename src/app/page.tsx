@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Baby, ChevronRight } from "lucide-react";
 import { Header } from "@/components/layout/Header";
@@ -8,6 +8,7 @@ import { RemindersCard } from "@/components/RemindersCard";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { SummaryCard } from "@/components/charts/SummaryCard";
+import { ChartFilters } from "@/components/charts/ChartFilters";
 import { GlucoseChart } from "@/components/charts/GlucoseChartLazy";
 import { TipsFeed } from "@/components/TipsFeed";
 import { CommunityFeed } from "@/components/CommunityFeed";
@@ -18,6 +19,7 @@ import { useRegisterPageRefresh } from "@/contexts/RefreshContext";
 import { api } from "@/lib/api";
 import { calcAverage } from "@/lib/glucose";
 import { usePremiumSettings } from "@/contexts/PremiumSettingsContext";
+import { filterMarkingsForChart, type ChartDaysFilter, type ChartPeriodFilter } from "@/lib/reportStats";
 import { TARGET_INFO } from "@/lib/utils";
 import type { Medicao } from "@/types";
 
@@ -25,7 +27,9 @@ export default function HomePage() {
   const { user } = useAuth();
   const { freePdfLimit } = usePremiumSettings();
   const [medias, setMedias] = useState({ jejum: 0, apos: 0 });
-  const [recent, setRecent] = useState<Medicao[]>([]);
+  const [allMarkings, setAllMarkings] = useState<Medicao[]>([]);
+  const [chartPeriod, setChartPeriod] = useState<ChartPeriodFilter>("all");
+  const [chartDays, setChartDays] = useState<ChartDaysFilter>(15);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
@@ -41,11 +45,7 @@ export default function HomePage() {
         jejum: calcAverage(jejum.map((m: Medicao) => m.value)),
         apos: calcAverage(aposLanch.map((m: Medicao) => m.value)),
       });
-      setRecent(
-        [...listRes.data]
-          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-          .slice(0, 5)
-      );
+      setAllMarkings(listRes.data);
     } catch {
       // silently fail on home
     } finally {
@@ -58,6 +58,11 @@ export default function HomePage() {
   }, [load]);
 
   useRegisterPageRefresh(load);
+
+  const chartData = useMemo(
+    () => filterMarkingsForChart(allMarkings, { days: chartDays, period: chartPeriod }),
+    [allMarkings, chartDays, chartPeriod]
+  );
 
   const pdfCount = user?.pdf_downloads_count ?? 0;
   const atPdfLimit = Boolean(user && !user.is_premium && pdfCount >= freePdfLimit);
@@ -93,16 +98,24 @@ export default function HomePage() {
         </div>
 
         <Card>
-          <div className="mb-3 flex items-center justify-between">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <h3 className="font-semibold text-gray-900">Evolução recente</h3>
-            <Link href="/relatorio" className="flex items-center gap-1 text-sm text-brand-600 font-medium">
-              Ver mais <ChevronRight className="h-4 w-4" />
-            </Link>
+            <div className="flex items-center gap-2">
+              <ChartFilters
+                period={chartPeriod}
+                days={chartDays}
+                onPeriodChange={setChartPeriod}
+                onDaysChange={setChartDays}
+              />
+              <Link href="/relatorio" className="flex items-center gap-1 text-sm text-brand-600 font-medium shrink-0">
+                Ver mais <ChevronRight className="h-4 w-4" />
+              </Link>
+            </div>
           </div>
           {loading ? (
             <div className="h-48 flex items-center justify-center text-gray-400 text-sm">Carregando...</div>
           ) : (
-            <GlucoseChart data={recent} />
+            <GlucoseChart data={chartData} />
           )}
         </Card>
 

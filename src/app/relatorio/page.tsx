@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/Header";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { SummaryCard } from "@/components/charts/SummaryCard";
+import { ChartFilters } from "@/components/charts/ChartFilters";
 import { GlucoseChart } from "@/components/charts/GlucoseChartLazy";
 import { PdfLimitModal } from "@/components/premium/PdfLimitModal";
 import { PremiumReturnHandler } from "@/components/premium/PremiumReturnHandler";
@@ -18,9 +19,9 @@ import { api } from "@/lib/api";
 import { calcAverage, formatTargetsLine, getGlucoseStatus, getStatusColor, getStatusLabel } from "@/lib/glucose";
 import { usePremiumSettings } from "@/contexts/PremiumSettingsContext";
 import { PREMIUM_KIT_FEATURES, type PdfTemplate } from "@/lib/premium";
-import { computeReportStats, filterMarkingsForTemplate } from "@/lib/reportStats";
+import { computeReportStats, filterMarkingsForChart, filterMarkingsForTemplate, type ChartDaysFilter, type ChartPeriodFilter } from "@/lib/reportStats";
 import { gestationSummary } from "@/lib/pregnancy";
-import { cn } from "@/lib/utils";
+import { cn, parseCalendarDate } from "@/lib/utils";
 import { useRegisterPageRefresh } from "@/contexts/RefreshContext";
 import type { Medicao } from "@/types";
 
@@ -36,6 +37,8 @@ export default function RelatorioPage() {
   const { freePdfLimit, formatPremiumPrice } = usePremiumSettings();
   const { exportPdf, exporting, showLimitModal, setShowLimitModal } = usePdfExport();
   const [year, setYear] = useState("todos");
+  const [chartPeriod, setChartPeriod] = useState<ChartPeriodFilter>("all");
+  const [chartDays, setChartDays] = useState<ChartDaysFilter>(null);
   const [pdfTemplate, setPdfTemplate] = useState<PdfTemplate>("completo");
   const [allMarkings, setAllMarkings] = useState<Medicao[]>([]);
   const [medias, setMedias] = useState({ jejum: 0, apos: 0, total: 0 });
@@ -56,7 +59,7 @@ export default function RelatorioPage() {
       let filtered = listRes.data;
       if (year !== "todos") {
         filtered = listRes.data.filter((m) =>
-          new Date(m.date).getFullYear().toString() === year
+          parseCalendarDate(m.date).getFullYear().toString() === year
         );
       }
 
@@ -80,10 +83,15 @@ export default function RelatorioPage() {
     [allMarkings, pdfTemplate, year]
   );
 
-  const inTarget = exportMarkings.filter(
+  const chartMarkings = useMemo(
+    () => filterMarkingsForChart(allMarkings, { days: chartDays, period: chartPeriod, year }),
+    [allMarkings, chartDays, chartPeriod, year]
+  );
+
+  const inTarget = chartMarkings.filter(
     (m) => getGlucoseStatus(m.value, m.period, targets) === "normal"
   ).length;
-  const pct = exportMarkings.length ? Math.round((inTarget / exportMarkings.length) * 100) : 0;
+  const pct = chartMarkings.length ? Math.round((inTarget / chartMarkings.length) * 100) : 0;
 
   const gestationLine = gestationSummary(
     user?.pregnancy?.dueDate,
@@ -178,6 +186,23 @@ export default function RelatorioPage() {
         </div>
 
         <Card>
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <h3 className="font-semibold text-gray-900">Gráfico de evolução</h3>
+            <ChartFilters
+              period={chartPeriod}
+              days={chartDays}
+              onPeriodChange={setChartPeriod}
+              onDaysChange={setChartDays}
+            />
+          </div>
+          {loading ? (
+            <div className="h-48 flex items-center justify-center text-gray-400 text-sm">Carregando...</div>
+          ) : (
+            <GlucoseChart data={chartMarkings} />
+          )}
+        </Card>
+
+        <Card>
           <h3 className="font-semibold text-gray-900 mb-3">Controle geral</h3>
           <div className="flex items-center gap-4">
             <div className="relative h-20 w-20 shrink-0">
@@ -197,25 +222,16 @@ export default function RelatorioPage() {
             <div>
               <p className="text-sm font-semibold text-gray-900">Dentro da meta</p>
               <p className="text-xs text-gray-500 mt-1">
-                {inTarget} de {exportMarkings.length} medições no modelo selecionado.
+                {inTarget} de {chartMarkings.length} medições no período filtrado.
               </p>
             </div>
           </div>
         </Card>
 
         <Card>
-          <h3 className="font-semibold text-gray-900 mb-3">Gráfico de evolução</h3>
-          {loading ? (
-            <div className="h-48 flex items-center justify-center text-gray-400 text-sm">Carregando...</div>
-          ) : (
-            <GlucoseChart data={allMarkings} />
-          )}
-        </Card>
-
-        <Card>
           <h3 className="font-semibold text-gray-900 mb-3">Distribuição por período</h3>
           {["Jejum", "Após Café", "Após Almoço", "Após Jantar"].map((period) => {
-            const items = allMarkings.filter((m) => m.period === period);
+            const items = chartMarkings.filter((m) => m.period === period);
             const avg = calcAverage(items.map((m) => m.value));
             const status = avg > 0 ? getGlucoseStatus(avg, period as Medicao["period"], targets) : null;
             return (

@@ -3,16 +3,19 @@ import { useGlucoseTargets } from "@/hooks/useGlucoseTargets";
 import { getGlucoseStatus, getStatusColor, getStatusLabel } from "@/lib/glucose";
 import { cn } from "@/lib/utils";
 import type { GlucosePeriod } from "@/types";
+import type { GlucoseTargets } from "@/lib/premium";
 
 interface SummaryCardProps {
   label: string;
   value: number;
   period: GlucosePeriod;
   icon: string;
+  targets?: GlucoseTargets;
 }
 
-export function SummaryCard({ label, value, period, icon }: SummaryCardProps) {
-  const targets = useGlucoseTargets();
+export function SummaryCard({ label, value, period, icon, targets: targetsProp }: SummaryCardProps) {
+  const hookTargets = useGlucoseTargets();
+  const targets = targetsProp ?? hookTargets;
   const status = value > 0 ? getGlucoseStatus(value, period, targets) : null;
 
   return (
