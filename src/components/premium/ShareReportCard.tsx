@@ -49,8 +49,9 @@ export function ShareReportCard({ onNeedPremium }: ShareReportCardProps) {
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-gray-900">Link para sua médica</h3>
           <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-            Gere um link read-only com os últimos 14 dias. Expira em 7 dias — ideal para enviar antes
-            da consulta.
+            Gere um link read-only com os últimos 14 dias. Expira em 7 dias. Ao compartilhar, você
+            autoriza o acesso aos seus dados de glicemia por quem tiver o link — use apenas com
+            profissionais de confiança.
           </p>
         </div>
       </div>

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BookOpen, ChevronRight, HelpCircle, Users, X } from "lucide-react";
-import { LP_URL } from "@/lib/brand";
+import { LP_URL, LEGAL_PRIVACY_URL, LEGAL_TERMS_URL } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { PremiumBadge } from "@/components/premium/PremiumBadge";
@@ -32,6 +32,20 @@ const LINKS = [
     href: `${LP_URL}/dicas`,
     label: "Dicas para você",
     description: "Artigos sobre gestação e glicemia",
+    icon: BookOpen,
+    external: true,
+  },
+  {
+    href: LEGAL_PRIVACY_URL,
+    label: "Privacidade",
+    description: "Como tratamos seus dados (LGPD)",
+    icon: BookOpen,
+    external: true,
+  },
+  {
+    href: LEGAL_TERMS_URL,
+    label: "Termos de uso",
+    description: "Regras de uso do GestaGlic",
     icon: BookOpen,
     external: true,
   },

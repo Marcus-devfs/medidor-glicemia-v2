@@ -9,9 +9,11 @@ import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Toggle } from "@/components/ui/Toggle";
+import { Modal } from "@/components/ui/Modal";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRegisterPageRefresh } from "@/contexts/RefreshContext";
 import { api } from "@/lib/api";
+import { LEGAL_CONTACT_EMAIL, LEGAL_PRIVACY_URL, LEGAL_TERMS_URL } from "@/lib/brand";
 import { useReminders } from "@/hooks/useReminders";
 import { gestationSummary } from "@/lib/pregnancy";
 import { PREMIUM_KIT_FEATURES } from "@/lib/premium";
@@ -21,6 +23,8 @@ import type { User } from "@/types";
 
 export default function PerfilPage() {
   const { user, logout, toast, updateUser, refreshUser } = useAuth();
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [name, setName] = useState(user?.name ?? "");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -343,11 +347,71 @@ export default function PerfilPage() {
           </Link>
         </Card>
 
+        <Card className="flex flex-col gap-2">
+          <p className="font-semibold text-gray-900 text-sm">Privacidade e dados</p>
+          <p className="text-xs text-gray-500 leading-relaxed">
+            Você pode solicitar informações ou exclusão pelo e-mail{" "}
+            <a href={`mailto:${LEGAL_CONTACT_EMAIL}`} className="text-brand-600 font-medium">
+              {LEGAL_CONTACT_EMAIL}
+            </a>
+            .
+          </p>
+          <div className="flex flex-wrap gap-3 text-xs">
+            <a href={LEGAL_PRIVACY_URL} target="_blank" rel="noopener noreferrer" className="text-brand-600 font-medium">
+              Política de Privacidade
+            </a>
+            <a href={LEGAL_TERMS_URL} target="_blank" rel="noopener noreferrer" className="text-brand-600 font-medium">
+              Termos de Uso
+            </a>
+          </div>
+          <button
+            type="button"
+            onClick={() => setDeleteOpen(true)}
+            className="self-start text-xs text-gray-400 hover:text-red-600 underline-offset-2 hover:underline mt-1"
+          >
+            Excluir minha conta permanentemente
+          </button>
+        </Card>
+
         <Button variant="danger" fullWidth onClick={logout}>
           <LogOut className="h-4 w-4" />
           Sair da conta
         </Button>
       </main>
+
+      <Modal open={deleteOpen} onClose={() => setDeleteOpen(false)} title="Excluir conta permanentemente?">
+        <p className="text-sm text-gray-600 mb-2 leading-relaxed">
+          Esta ação não pode ser desfeita. Todas as suas medições e dados da conta serão removidos.
+        </p>
+        <p className="text-xs text-red-600 mb-4">
+          Tem certeza? Se quiser apenas sair deste aparelho, use &quot;Sair da conta&quot; abaixo.
+        </p>
+        <div className="flex gap-3">
+          <Button variant="secondary" fullWidth onClick={() => setDeleteOpen(false)}>
+            Cancelar
+          </Button>
+          <Button
+            variant="danger"
+            fullWidth
+            disabled={deleting}
+            onClick={async () => {
+              setDeleting(true);
+              try {
+                await api.delete("/user/me");
+                toast("Conta excluída", "success");
+                setDeleteOpen(false);
+                logout();
+              } catch {
+                toast("Erro ao excluir conta", "error");
+              } finally {
+                setDeleting(false);
+              }
+            }}
+          >
+            {deleting ? "Excluindo..." : "Excluir conta"}
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }

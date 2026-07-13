@@ -78,6 +78,9 @@ export interface RegisterData {
   telephone?: string;
   gender?: string;
   birthDate?: string;
+  acceptedTerms: boolean;
+  acceptedPrivacy: boolean;
+  acceptedHealthData: boolean;
 }
 
 export interface ArticlePreview {
