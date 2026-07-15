@@ -12,11 +12,13 @@ import { useRegisterPageRefresh } from "@/contexts/RefreshContext";
 import { api } from "@/lib/api";
 import { formatDateBR, groupMarkingsByDate, removeAccents, sortMarkingsByDate } from "@/lib/utils";
 import { getGlucoseStatus, getStatusColor, getStatusLabel } from "@/lib/glucose";
+import { useGlucoseTargets } from "@/hooks/useGlucoseTargets";
 import { cn } from "@/lib/utils";
 import type { Medicao } from "@/types";
 
 export default function HistoricoPage() {
   const { user, toast } = useAuth();
+  const targets = useGlucoseTargets();
   const [markings, setMarkings] = useState<Medicao[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -95,7 +97,7 @@ export default function HistoricoPage() {
                 {group.dateLabel}
               </h2>
               {group.items.map((m) => {
-                const status = getGlucoseStatus(m.value, m.period);
+                const status = getGlucoseStatus(m.value, m.period, targets);
                 return (
                   <Card key={m._id} className="flex flex-col gap-2">
                     <div className="flex items-start justify-between">

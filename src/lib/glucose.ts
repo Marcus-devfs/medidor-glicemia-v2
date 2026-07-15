@@ -17,13 +17,14 @@ export function getGlucoseStatus(
   period: GlucosePeriod,
   targets: GlucoseTargets = DEFAULT_GLUCOSE_TARGETS
 ): GlucoseStatus {
+  // Metas gestacionais são limites superiores ("menor que"): no limite ou acima = fora da meta.
   if (period === "Jejum") {
     if (value < targets.jejum) return "normal";
-    if (value <= targets.jejum + 10) return "warning";
+    if (value < targets.jejum + 10) return "warning";
     return "danger";
   }
   if (value < targets.pos1h) return "normal";
-  if (value <= targets.pos1h + 20) return "warning";
+  if (value < targets.pos1h + 20) return "warning";
   return "danger";
 }
 
@@ -47,7 +48,7 @@ export function getStatusLabel(status: GlucoseStatus) {
     case "normal":
       return "Dentro da meta";
     case "warning":
-      return "Atenção";
+      return "Acima da meta";
     case "danger":
       return "Acima da meta";
   }
