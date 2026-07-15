@@ -39,7 +39,7 @@ export default function RelatorioPage() {
   const [year, setYear] = useState("todos");
   const [chartPeriod, setChartPeriod] = useState<ChartPeriodFilter>("all");
   const [chartDays, setChartDays] = useState<ChartDaysFilter>(null);
-  const [pdfTemplate, setPdfTemplate] = useState<PdfTemplate>("completo");
+  const [pdfTemplate, setPdfTemplate] = useState<PdfTemplate>("consulta30");
   const [allMarkings, setAllMarkings] = useState<Medicao[]>([]);
   const [medias, setMedias] = useState({ jejum: 0, apos: 0, total: 0 });
   const [loading, setLoading] = useState(true);
@@ -234,10 +234,22 @@ export default function RelatorioPage() {
             const items = chartMarkings.filter((m) => m.period === period);
             const avg = calcAverage(items.map((m) => m.value));
             const status = avg > 0 ? getGlucoseStatus(avg, period as Medicao["period"], targets) : null;
+            const total = chartMarkings.length;
+            const pct =
+              total > 0 && items.length > 0
+                ? Math.round((items.length / total) * 100)
+                : null;
             return (
-              <div key={period} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-                <span className="text-sm text-gray-600">{period}</span>
-                <div className="flex items-center gap-2">
+              <div key={period} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0 gap-2">
+                <div className="min-w-0">
+                  <span className="text-sm text-gray-600">{period}</span>
+                  {pct != null && (
+                    <p className="text-[11px] text-gray-400">
+                      {items.length} de {total} · {pct}%
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
                   <span className="text-sm font-semibold">{avg > 0 ? `${avg} mg/dL` : "—"}</span>
                   {status && (
                     <span className={cn("text-xs rounded-full px-2 py-0.5 border", getStatusColor(status))}>

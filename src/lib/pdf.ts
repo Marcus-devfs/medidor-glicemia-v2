@@ -266,13 +266,19 @@ export async function generateReportPdf(
   doc.text("Resumo por Período", 14, finalY);
   finalY += 4;
 
+  const periodTotal = markings.length;
   const periodRows = PERIOD_ORDER.map((period) => {
     const items = markings.filter((m) => m.period === period);
     const avg = calcAverage(items.map((m) => m.value));
     const status = avg > 0 ? getGlucoseStatus(avg, period as GlucosePeriod, targets) : null;
+    const pct =
+      periodTotal > 0 && items.length > 0
+        ? `${Math.round((items.length / periodTotal) * 100)}%`
+        : "—";
     return [
       period,
       items.length > 0 ? String(items.length) : "0",
+      pct,
       avg > 0 ? `${avg} mg/dL` : "—",
       status ? getStatusLabel(status) : "—",
     ];
@@ -280,7 +286,7 @@ export async function generateReportPdf(
 
   autoTable(doc, {
     startY: finalY + 2,
-    head: [["Período", "Nº medições", "Média", "Status"]],
+    head: [["Período", "Nº medições", "% do total", "Média", "Status"]],
     body: periodRows,
     theme: "striped",
     headStyles: {

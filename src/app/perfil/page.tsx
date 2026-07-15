@@ -15,11 +15,11 @@ import { useRegisterPageRefresh } from "@/contexts/RefreshContext";
 import { api } from "@/lib/api";
 import { LEGAL_CONTACT_EMAIL, LEGAL_PRIVACY_URL, LEGAL_TERMS_URL } from "@/lib/brand";
 import { useReminders } from "@/hooks/useReminders";
-import { gestationSummary } from "@/lib/pregnancy";
+import { babySexLabel, gestationSummary, momOfBabyLabel } from "@/lib/pregnancy";
 import { PREMIUM_KIT_FEATURES } from "@/lib/premium";
 import { DEFAULT_GLUCOSE_TARGETS } from "@/lib/premium";
 import { toDateInputValue } from "@/lib/utils";
-import type { User } from "@/types";
+import type { BabySex, User } from "@/types";
 
 export default function PerfilPage() {
   const { user, logout, toast, updateUser, refreshUser } = useAuth();
@@ -30,6 +30,8 @@ export default function PerfilPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [fetusCount, setFetusCount] = useState(1);
+  const [babyName, setBabyName] = useState("");
+  const [babySex, setBabySex] = useState<BabySex>("nao_informado");
   const [targetJejum, setTargetJejum] = useState<number>(DEFAULT_GLUCOSE_TARGETS.jejum);
   const [targetPos1h, setTargetPos1h] = useState<number>(DEFAULT_GLUCOSE_TARGETS.pos1h);
   const [targetPos2h, setTargetPos2h] = useState<number>(DEFAULT_GLUCOSE_TARGETS.pos2h);
@@ -42,6 +44,8 @@ export default function PerfilPage() {
     setName(user.name ?? "");
     setDueDate(user.pregnancy?.dueDate ? toDateInputValue(user.pregnancy.dueDate) : "");
     setFetusCount(user.pregnancy?.fetusCount ?? 1);
+    setBabyName(user.pregnancy?.babyName ?? "");
+    setBabySex(user.pregnancy?.babySex ?? "nao_informado");
     setTargetJejum(user.glucoseTargets?.jejum ?? DEFAULT_GLUCOSE_TARGETS.jejum);
     setTargetPos1h(user.glucoseTargets?.pos1h ?? DEFAULT_GLUCOSE_TARGETS.pos1h);
     setTargetPos2h(user.glucoseTargets?.pos2h ?? DEFAULT_GLUCOSE_TARGETS.pos2h);
@@ -71,6 +75,8 @@ export default function PerfilPage() {
       pregnancy: {
         dueDate: dueDate || null,
         fetusCount,
+        babyName: babyName.trim() || null,
+        babySex,
       },
     });
 
@@ -129,6 +135,7 @@ export default function PerfilPage() {
   };
 
   const gestationLine = gestationSummary(dueDate || user?.pregnancy?.dueDate, fetusCount);
+  const momLine = momOfBabyLabel({ babyName, babySex });
 
   return (
     <div className="mx-auto max-w-lg">
@@ -186,8 +193,37 @@ export default function PerfilPage() {
                 <option value={3}>3 ou mais</option>
               </select>
             </div>
-            {gestationLine && (
-              <p className="text-xs text-brand-700 bg-brand-50 rounded-lg px-3 py-2">{gestationLine}</p>
+            <Input
+              label="Nome do bebê (opcional)"
+              value={babyName}
+              onChange={(e) => setBabyName(e.target.value)}
+              placeholder={fetusCount > 1 ? "Ex.: Sofia e Pedro" : "Ex.: Sofia"}
+              maxLength={80}
+            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Sexo do bebê
+              </label>
+              <select
+                value={babySex}
+                onChange={(e) => setBabySex(e.target.value as BabySex)}
+                className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-brand-400 focus:outline-none"
+              >
+                <option value="nao_informado">{babySexLabel("nao_informado")}</option>
+                <option value="feminino">{babySexLabel("feminino")}</option>
+                <option value="masculino">{babySexLabel("masculino")}</option>
+              </select>
+              <p className="mt-1.5 text-[11px] text-gray-400 leading-relaxed">
+                Usamos isso só para personalizar saudação e lembretes — nada disso aparece no PDF da
+                obstetra.
+              </p>
+            </div>
+            {(gestationLine || momLine) && (
+              <p className="text-xs text-brand-700 bg-brand-50 rounded-lg px-3 py-2">
+                {[momLine ? `Você é a ${momLine}` : null, gestationLine]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
             )}
             <Button onClick={handleSavePregnancy} disabled={saving} fullWidth>
               Salvar gestação

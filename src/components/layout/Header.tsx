@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Heart, Menu } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getFirstName } from "@/lib/utils";
+import { welcomeMomTitle } from "@/lib/pregnancy";
 import { APP_NAME } from "@/lib/brand";
 import { SideMenu } from "./SideMenu";
 
@@ -20,6 +21,8 @@ export function Header({ title, subtitle }: HeaderProps) {
 
   if (pathname === "/login") return null;
 
+  const defaultTitle = welcomeMomTitle(getFirstName(user?.name), user?.pregnancy);
+
   return (
     <>
       <header className="sticky top-0 z-30 bg-brand-50/90 backdrop-blur-md safe-top">
@@ -33,7 +36,7 @@ export function Header({ title, subtitle }: HeaderProps) {
                 {APP_NAME}
               </p>
               <h1 className="truncate text-lg font-bold text-gray-900">
-                {title ?? `Olá, ${getFirstName(user?.name)}! 💗`}
+                {title ?? defaultTitle}
               </h1>
               {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
             </div>

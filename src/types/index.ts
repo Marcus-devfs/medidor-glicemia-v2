@@ -1,8 +1,12 @@
 export type GlucosePeriod = "Jejum" | "Após Café" | "Após Almoço" | "Após Jantar";
 
+export type BabySex = "feminino" | "masculino" | "nao_informado";
+
 export interface PregnancyProfile {
   dueDate?: string | null;
   fetusCount?: number;
+  babyName?: string | null;
+  babySex?: BabySex | null;
 }
 
 export interface GlucoseTargets {

@@ -18,6 +18,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRegisterPageRefresh } from "@/contexts/RefreshContext";
 import { api } from "@/lib/api";
 import { calcAverage } from "@/lib/glucose";
+import { babyCareSubtitle } from "@/lib/pregnancy";
 import { usePremiumSettings } from "@/contexts/PremiumSettingsContext";
 import { filterMarkingsForChart, type ChartDaysFilter, type ChartPeriodFilter } from "@/lib/reportStats";
 import { TARGET_INFO } from "@/lib/utils";
@@ -69,7 +70,7 @@ export default function HomePage() {
 
   return (
     <div className="mx-auto max-w-lg">
-      <Header subtitle="Cuide da sua saúde e do seu bebê" />
+      <Header subtitle={babyCareSubtitle(user?.pregnancy)} />
 
       <main className="flex flex-col gap-5 px-4 pb-4">
         {!user?.is_premium &&
