@@ -18,6 +18,17 @@ export interface GlucoseTargets {
 export interface UserPreferences {
   notificationsEnabled?: boolean;
   weeklySummaryEmail?: boolean;
+  dismissedAnnouncementIds?: string[];
+}
+
+export interface AppAnnouncement {
+  _id: string;
+  title: string;
+  body: string;
+  kind: "feature" | "campaign" | "info";
+  ctaLabel?: string | null;
+  ctaHref?: string | null;
+  publishedAt?: string;
 }
 
 export interface User {

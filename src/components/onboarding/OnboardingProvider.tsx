@@ -23,6 +23,7 @@ const PUBLIC_PATHS = ["/login", "/recuperar-senha", "/redefinir-senha"];
 
 interface OnboardingContextValue {
   openOnboarding: () => void;
+  isOpen: boolean;
 }
 
 const OnboardingContext = createContext<OnboardingContextValue | null>(null);
@@ -51,7 +52,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     setOpen(false);
   }, [user?._id]);
 
-  const value = useMemo(() => ({ openOnboarding }), [openOnboarding]);
+  const value = useMemo(() => ({ openOnboarding, isOpen: open }), [openOnboarding, open]);
 
   return (
     <OnboardingContext.Provider value={value}>

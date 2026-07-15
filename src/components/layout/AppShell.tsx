@@ -8,6 +8,7 @@ import { RefreshProvider } from "@/contexts/RefreshContext";
 import { PremiumSettingsProvider } from "@/contexts/PremiumSettingsContext";
 import { PwaInstallProvider } from "@/components/pwa/PwaInstallProvider";
 import { OnboardingProvider } from "@/components/onboarding/OnboardingProvider";
+import { AnnouncementProvider } from "@/components/AnnouncementProvider";
 
 const PUBLIC_PATHS = ["/login", "/recuperar-senha", "/redefinir-senha"];
 
@@ -35,14 +36,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <OnboardingProvider>
-      <PwaInstallProvider />
-      <PremiumSettingsProvider>
-        <RefreshProvider enabled={!isPublic}>
-          <div className={isPublic ? "min-h-screen" : "min-h-screen pb-24"}>{children}</div>
-        </RefreshProvider>
-      </PremiumSettingsProvider>
-      {!isPublic && <BottomNav />}
-      <Toast />
+      <AnnouncementProvider>
+        <PwaInstallProvider />
+        <PremiumSettingsProvider>
+          <RefreshProvider enabled={!isPublic}>
+            <div className={isPublic ? "min-h-screen" : "min-h-screen pb-24"}>{children}</div>
+          </RefreshProvider>
+        </PremiumSettingsProvider>
+        {!isPublic && <BottomNav />}
+        <Toast />
+      </AnnouncementProvider>
     </OnboardingProvider>
   );
 }
